@@ -1,0 +1,6 @@
+rooms:
+  - manuscript
+  - study
+  - desk
+  - visitors
+default: manuscript

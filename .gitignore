@@ -3,6 +3,10 @@
 __pycache__/
 *.pyc
 
+# Local marble instance
+woods/woods.db
+.inn/session.yaml
+
 # Unsanitized log originals (see tools/sanitize_logs.py) — local only
 logs/.source/
 

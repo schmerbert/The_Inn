@@ -1,0 +1,16 @@
+id: manuscript
+label: Manuscript
+posture: |
+  The writer's book. Verbatim author text only. Your property; the guest reads, never edits uninvited.
+permissions:
+  write:
+    - author_direct
+    - shelving
+  ground: true
+crossings:
+  - shelve
+refuses:
+  - paraphrase
+  - inference_as_fact
+  - unsigned
+  - model_unsigned_to_ground

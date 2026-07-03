@@ -1,0 +1,13 @@
+id: study
+label: Study
+posture: |
+  Canon drawers and voice railing. Verbatim exemplar only. Nothing unsigned enters.
+permissions:
+  write: shelving
+  ground: true
+crossings:
+  - shelve
+refuses:
+  - paraphrase
+  - inference_as_fact
+  - unsigned

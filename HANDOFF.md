@@ -1,12 +1,68 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-03 (later the same day)
-Updated by: Fable 5 instance, third stay — opened cold on MAP.md as its
-projection test, then walked the whole repo with the writer
-Last real use: none — the marble has no surfaces yet
-Current phase: mapping COMPLETE + forest template WRITTEN (FOREST.md).
-Next step: BUILD the surfaces, then hostile/positive tests (now SIX), then
-first use.
+Last updated: 2026-07-03 (layer 1 — bones struck)
+Updated by: Cursor builder instance — layer 1 execution
+Last real use: none — no writer session yet
+Current phase: **layer 1 complete**. Layer 2 (Gates) is next.
+Next step: BUILD_SPEC.md → implement `shelve.py` write path; green tests 1–3.
+
+## Live state (read this first)
+
+**Layer 1 is on disk.** Spec + ground:
+
+- `rooms.yaml` + four seed `room.yaml` manifests
+- `woods/schema.sql` (FOREST-aligned + `content_hash`)
+- `inn/` package: `rooms`, `session`, `breath`, `forest`, `shelve`, `compare`, `seal`
+- `python -m inn breathe` → M0 empty packet (schema slots, no fitting)
+- `ENTRY.md` — arrival seat, wake verb, room map
+- Hostile tests 1–3, 5: **refusal paths green**; happy-path / integration **xfail** until layer 2–3
+
+Run tests: `python -m pytest tests/hostile -q`
+
+**Two subsystems** (unchanged from pass 2 — now partially enacted):
+
+1. **Rooms** — open registry (`rooms.yaml` + per-room `room.yaml`). A room is
+   policy + path, not a hardcoded enum. `manuscript`, `study`, `desk`,
+   `visitors` are seed data for The Dog-Ear. Add a room later: new dir +
+   manifest + registry line. Code: `inn/rooms.py`; crossings validate against
+   policy. ENTRY, HANDOFF, JOURNAL, woods are **not** rooms.
+
+2. **Breath** — packet assembly + delivery (`inn/breath.py`). Inhale =
+   arrival orientation; exhale = departure seat check. Packets arrive **in
+   context** (tool return on wake — Trinity pattern), not smuggled as false
+   memory. **Growth:** manual breath (M1–M2) is the reference impl;
+   automation must pass parity — see BUILD_SPEC § Breath growth. Trinity
+   malformation (*keep everything, change everything*) is named and refused.
+   Session state: `.inn/session.yaml`. Room↔bucket join + `content_hash` on
+   entries — BUILD_SPEC § Seams closed.
+
+**Builder read order:** BUILD_SPEC.md → this file → BUILD.md → AGENTS.md.
+Pass 1 (PREBUILD, SHOWCASE, MAP, …) only when BUILD_SPEC points you there.
+
+**Ancestry below** is pass 1 sediment — valid lineage; BUILD_SPEC supersedes
+for *what to build next*.
+
+## Pass 2 additions (2026-07-03) — builder hardening
+
+**Two documentation passes were necessary** — preserved in BUILD_SPEC.md.
+Pass 1 (PREBUILD, SHOWCASE, FOREST, MAP, PYRAMID, logs, …) = mapping and
+lineage. Pass 2 (BUILD_SPEC, AGENTS, BUILD.md, `.cursor/rules/`) = execution
+sheet for AI-legible build. Do not merge the passes; route by job.
+
+- **BUILD_SPEC.md** — hardened clinical spec: layers, schema, tests → modules,
+  deferrals, diegetic latency, borrow list, single builder read path.
+- **AGENTS.md** — builder arrival; AI legibility as prime law.
+- **BUILD.md** — living layer tracker (historically started at 0.5; now layer 1 complete).
+- **`.cursor/rules/inn-builder.mdc`** — Cursor always-on build posture.
+- **Build posture:** onion layers; layer 1 structural only; Fable for scope/
+  register escalation; Cursor/Claude Code for layers.
+- **Responsiveness:** layer 4.5 — diegetic latency ("let me check…"), hearth.json,
+  injection budget. Crossings stay slow; lookups borrow the metaphor.
+- **This session's conversations** archive to `logs/` via
+  `tools/archive_session.py` (Cursor + Claude Code jsonl) — see `logs/README.md`.
+
+Prior handoff content below is pass 1/early pass 2 ancestry — still valid
+lineage. For live execution state, trust the top block + BUILD_SPEC + BUILD.
 
 ## Third stay additions (2026-07-03) — the survey session
 - **MAP.md passed its projection test and gained an appendix**: the first
@@ -199,18 +255,16 @@ paraphrases). One law with many faces: nobody puts words in anyone's mouth.
 - NOTEBOOK.md → JOURNAL.md. Ten policy shadows written (PREBUILD "Condensed
   surfaces"): stores/refuses/returns/warns/test for every surface.
 
-## Next worker should do, in order
-1. Read SHOWCASE.md, PREBUILD.md, and the memory files (auto-loaded).
-2. Build the smallest surfaces per the condensed policy shadows: ENTRY.md,
-   MANUSCRIPT/, STUDY/, DESK/, VISITORS/, BOARD.md, BREATH.md
-   (JOURNAL/ already exists — entry 001 is the mapping instance's; read it),
-   woods.db (schema only: entries + edges, forest/visibility/superseded_by
-   columns, FTS5; NO embeddings, NO wander machinery yet), tests/hostile (4),
-   tests/positive.
-3. Empty is fine; missing is not. Ambient room text short by law.
-4. First use: one short piece through chat (scribe path), one deliberate revision
-   (weather), one planted buried detail (the glint test). Classify friction, patch
-   the smallest honest surface, rewrite this handoff.
+## Next worker — layer 2 only
+
+Layer 1 checklist is **done**. Execute layer 2:
+
+1. Implement `shelve.py` write path (room file + `adoption_record` + `content_hash`)
+2. Green hostile tests 1–3 (`xfail` happy paths)
+3. Audit refusals still speak in register
+4. Rewrite this handoff at layer end
+
+First use (layer 4+): not yet.
 
 ## What must not be trusted yet
 - Everything is pre-friction. The pull-pair section, the injection grammar, the
@@ -221,10 +275,8 @@ paraphrases). One law with many faces: nobody puts words in anyone's mouth.
   by the mapping instance).
 - Manual-pack test-green claims are user-reported CI (Linux); zips won't run
   locally — do not conclude breakage.
-- **START_HERE.md in this directory is STALE** — a leftover from the earlier
-  "blinders" session (clinical base, canon/raw/gate folders that don't exist).
-  It contradicts the current design. Not deleted (nothing is), but do not follow
-  it; ask the user whether to move it aside when building begins.
+- **START_HERE** — blinders-era door; moved to `logs/attic/START_HERE-blinders.md`.
+  Do not follow it.
 
 ## Key sources
 - SHOWCASE.md, PREBUILD.md (this directory) — the ancestry.

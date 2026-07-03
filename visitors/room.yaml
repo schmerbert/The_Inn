@@ -1,0 +1,10 @@
+id: visitors
+label: Visitors
+posture: |
+  Kept identities and ban ledger. Deferred until layer 6.
+permissions:
+  write: deny
+  ground: false
+crossings: []
+refuses:
+  - all_writes

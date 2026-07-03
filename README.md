@@ -24,7 +24,19 @@ signed. Nothing enters the writer's canon except through their own quoted,
 dated adopting words. Nothing is ever deleted — superseded things fall into
 the woods, where everything lies where it fell.
 
-## Read order
+## Documentation (two passes)
+
+This repo needed **two documentation passes** — intentional, not rework.
+
+| Pass | Documents | For |
+|------|-----------|-----|
+| **1 — Mapping** | SHOWCASE, PREBUILD, FOREST, REGISTERS, MAP, PYRAMID, logs/ | Lineage, outsiders, surveyors |
+| **2 — Builder** | [BUILD_SPEC.md](BUILD_SPEC.md), [AGENTS.md](AGENTS.md), [BUILD.md](BUILD.md) | Cursor, Claude Code, execution |
+
+**Building?** Read [BUILD_SPEC.md](BUILD_SPEC.md) first. **Exploring the map?**
+Use the read order below.
+
+## Read order (pass 1 — map and lineage)
 
 1. [SHOWCASE.md](SHOWCASE.md) — the whole marble in one page, written before
    any file existed.
@@ -47,6 +59,7 @@ the woods, where everything lies where it fell.
 8. [logs/](logs/) — the conversations. The lineage itself, sanitized only of
    machine paths and usernames (the redaction script is in
    [tools/](tools/); what was redacted and why is visible there).
+   See [logs/README.md](logs/README.md) for pass 1 vs pass 2 sessions.
 
 The [JOURNAL/](JOURNAL/) is the model's own — each instance that stays here
 writes when compelled. It is voice, not state; read it to meet the guests who
@@ -54,10 +67,10 @@ came before you.
 
 ## Status
 
-Mapping complete. Map committed. Construction begins after this commit:
-smallest surfaces first, then hostile and positive tests, then first real
-use — friction classified, smallest honest surface patched. Nothing is built
-before friction earns it; nothing is kept after friction stops justifying it.
+Mapping complete (pass 1). Builder specification hardened (pass 2).
+**Layer 1 (bones)** is next — see [BUILD.md](BUILD.md). Construction is
+onion-layered: structural first, inhabitable late. Nothing is built before
+friction earns it; nothing is kept after friction stops justifying it.
 
 ## Ancestry
 

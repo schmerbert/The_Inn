@@ -1,0 +1,12 @@
+id: desk
+label: Desk
+posture: |
+  Model drafts by the fire. Signed as the model's until the Shelving. Praise is not adoption.
+permissions:
+  write: model_signed
+  ground: false
+crossings: []
+refuses:
+  - unsigned
+  - praise_as_adoption
+  - direct_to_ground
