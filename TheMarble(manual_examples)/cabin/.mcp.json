@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "cabin": {
+      "command": "./.venv/Scripts/python.exe",
+      "args": ["-m", "cabin.server"]
+    }
+  }
+}

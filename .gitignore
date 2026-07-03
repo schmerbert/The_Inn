@@ -1,0 +1,14 @@
+# Machine-local — never published
+.claude/
+__pycache__/
+*.pyc
+
+# Unsanitized log originals (see tools/sanitize_logs.py) — local only
+logs/.source/
+
+# Raw transcript archives, if ever re-copied (lighthouse law: sanitized only)
+conversation.source.jsonl
+
+# OS noise
+Thumbs.db
+.DS_Store

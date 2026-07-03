@@ -1,0 +1,24 @@
+# Cabin writes its memory here — never committed (LAW: data never leaves the machine)
+.cabin/
+.mycroft/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
+# Local model cache (sentence-transformers downloads here)
+.cache/
+
+# Local harness/session settings — never product source, never shipped
+.claude/
+
+# Build the public distributable from TRACKED files only, e.g.
+#   git archive --format=zip -o mycroft.zip HEAD
+# Do NOT zip the working folder: it drags in .venv/, .git/, __pycache__/,
+# .mycroft/, and .claude/ — none of which belong in a release.

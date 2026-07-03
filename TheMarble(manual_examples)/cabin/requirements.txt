@@ -1,0 +1,8 @@
+# cabin — local-first, no cloud, no API key for memory.
+# Own the mind; rent only local storage + a local embedder.
+sentence-transformers>=2.2
+sqlite-vec>=0.1.1
+numpy>=1.24
+fastmcp>=0.1
+starlette>=0.27
+uvicorn>=0.24

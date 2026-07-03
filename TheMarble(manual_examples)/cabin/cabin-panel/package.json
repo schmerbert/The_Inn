@@ -1,0 +1,22 @@
+{
+  "name": "cabin-panel",
+  "displayName": "Cabin Panel",
+  "description": "The human's second window into the cabin — live gauge, forest browser, memory state.",
+  "version": "0.0.1",
+  "engines": { "vscode": "^1.75.0" },
+  "categories": ["Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "cabin.openPanel",
+        "title": "Cabin: Open Panel"
+      },
+      {
+        "command": "cabin.sendHound",
+        "title": "Cabin: Send the Hound"
+      }
+    ]
+  }
+}

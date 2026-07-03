@@ -1,0 +1,330 @@
+/* style.css — Cabin Panel
+ *
+ * All visual tokens live here as CSS custom properties.
+ * Change this file to tune the look without touching component logic.
+ * Uses VS Code native variables so the panel feels native to the theme.
+ */
+
+:root {
+  /* ── Cabin-specific tokens ─────────────────────────────── */
+  --cabin-green:        #4ec94e;
+  --cabin-yellow:       #d4a017;
+  --cabin-red:          #e05050;
+  --cabin-dim:          var(--vscode-descriptionForeground, #888);
+  --cabin-border:       var(--vscode-panel-border, #333);
+  --cabin-tag-bg:       var(--vscode-badge-background, #3a3d41);
+  --cabin-tag-fg:       var(--vscode-badge-foreground, #ccc);
+  --cabin-input-bg:     var(--vscode-input-background, #1e1e1e);
+  --cabin-input-fg:     var(--vscode-input-foreground, #d4d4d4);
+  --cabin-input-border: var(--vscode-input-border, #3c3c3c);
+  --cabin-btn-bg:       var(--vscode-button-background, #0e639c);
+  --cabin-btn-fg:       var(--vscode-button-foreground, #fff);
+  --cabin-hover-bg:     var(--vscode-list-hoverBackground, rgba(255,255,255,.05));
+
+  /* ── Layout ────────────────────────────────────────────── */
+  --cabin-section-gap:  12px;
+  --cabin-pad:          10px 14px;
+  --cabin-radius:       4px;
+  --cabin-font-size:    13px;
+  --cabin-mono-size:    11px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: var(--vscode-font-family, system-ui, sans-serif);
+  font-size: var(--cabin-font-size);
+  color: var(--vscode-foreground, #d4d4d4);
+  background: var(--vscode-sideBar-background, #1e1e1e);
+  padding: var(--cabin-section-gap);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cabin-section-gap);
+}
+
+/* ── Section wrapper ───────────────────────────────────────── */
+.cabin-section {
+  border: 1px solid var(--cabin-border);
+  border-radius: var(--cabin-radius);
+  overflow: hidden;
+}
+
+.section-header {
+  padding: 6px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  color: var(--cabin-dim);
+  background: var(--vscode-sideBarSectionHeader-background, rgba(255,255,255,.03));
+  border-bottom: 1px solid var(--cabin-border);
+  cursor: default;
+  user-select: none;
+}
+
+.section-header.collapsible { cursor: pointer; }
+.section-header.collapsible::before { content: '▾ '; }
+.section-header.collapsible.collapsed::before { content: '▸ '; }
+
+.section-content {
+  padding: var(--cabin-pad);
+}
+
+.section-content.collapsed { display: none; }
+
+/* ── Gauge bar ─────────────────────────────────────────────── */
+.gauge-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gauge-bar-track {
+  height: 6px;
+  background: var(--cabin-border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.gauge-bar-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width .6s ease, background .4s ease;
+}
+
+.gauge-bar-fill.green  { background: var(--cabin-green); }
+.gauge-bar-fill.yellow { background: var(--cabin-yellow); }
+.gauge-bar-fill.red    { background: var(--cabin-red); }
+
+.gauge-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--cabin-dim);
+}
+
+.gauge-trend {
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+.gauge-trend.steady     { color: var(--cabin-dim); }
+.gauge-trend.climbing   { color: var(--cabin-yellow); }
+.gauge-trend.converging { color: var(--cabin-green); }
+.gauge-trend.thrashing  { color: var(--cabin-red); background: rgba(224,80,80,.15); }
+
+/* ── Provenance tags ───────────────────────────────────────── */
+.prov-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 5px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: var(--cabin-mono-size);
+  font-family: var(--vscode-editor-font-family, monospace);
+  background: var(--cabin-tag-bg);
+  color: var(--cabin-tag-fg);
+}
+
+.tag.voiced    { border-left: 2px solid var(--cabin-green); }
+.tag.voiceless { border-left: 2px solid var(--cabin-dim); }
+.tag.home      { border-left: 2px solid #5b9bd5; }
+.tag.wild      { border-left: 2px solid var(--cabin-yellow); }
+.tag.pressure  { border-left: 2px solid var(--cabin-red); }
+
+/* ── Entry card ────────────────────────────────────────────── */
+.entry-card {
+  border: 1px solid var(--cabin-border);
+  border-radius: var(--cabin-radius);
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  background: var(--vscode-editor-background, #1e1e1e);
+}
+
+.entry-body {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--cabin-mono-size);
+  white-space: pre-wrap;
+  word-break: break-word;
+  line-height: 1.5;
+  color: var(--vscode-foreground, #d4d4d4);
+  margin-bottom: 6px;
+}
+
+.entry-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.thread-view {
+  margin-top: 8px;
+  border-top: 1px solid var(--cabin-border);
+  padding-top: 8px;
+}
+.thread-trailhead {
+  font-size: 10px;
+  color: var(--cabin-dim);
+  font-style: italic;
+  margin-bottom: 4px;
+}
+.thread-meta {
+  font-size: 10px;
+  color: var(--cabin-dim);
+  margin-bottom: 6px;
+}
+.thread-entry {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--cabin-mono-size);
+  line-height: 1.4;
+  padding: 4px 6px;
+  margin-bottom: 3px;
+  border-radius: 3px;
+  color: var(--cabin-dim);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.thread-entry.thread-focus {
+  color: var(--vscode-foreground, #d4d4d4);
+  background: var(--cabin-hover);
+  border-left: 2px solid var(--cabin-accent);
+  padding-left: 8px;
+}
+
+/* ── Buttons ───────────────────────────────────────────────── */
+.btn {
+  padding: 3px 10px;
+  font-size: 11px;
+  border: none;
+  border-radius: var(--cabin-radius);
+  cursor: pointer;
+  background: var(--cabin-btn-bg);
+  color: var(--cabin-btn-fg);
+}
+.btn:hover { opacity: .85; }
+.btn.secondary {
+  background: transparent;
+  border: 1px solid var(--cabin-border);
+  color: var(--vscode-foreground, #d4d4d4);
+}
+.btn.danger { background: var(--cabin-red); color: #fff; }
+
+/* ── Inputs ────────────────────────────────────────────────── */
+.cabin-input {
+  width: 100%;
+  padding: 5px 8px;
+  background: var(--cabin-input-bg);
+  color: var(--cabin-input-fg);
+  border: 1px solid var(--cabin-input-border);
+  border-radius: var(--cabin-radius);
+  font-size: var(--cabin-font-size);
+  font-family: inherit;
+  outline: none;
+}
+.cabin-input:focus { border-color: var(--vscode-focusBorder, #007acc); }
+
+/* ── Notification item ─────────────────────────────────────── */
+.notif-item {
+  padding: 7px 10px;
+  border-left: 3px solid var(--cabin-yellow);
+  margin-bottom: 6px;
+  background: rgba(212, 160, 23, .06);
+  border-radius: 0 var(--cabin-radius) var(--cabin-radius) 0;
+}
+.notif-item.pressure { border-left-color: var(--cabin-red); background: rgba(224,80,80,.06); }
+.notif-item.seam     { border-left-color: #5b9bd5; background: rgba(91,155,213,.06); }
+
+.notif-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--cabin-dim);
+  margin-bottom: 3px;
+}
+
+/* ── Seam row ──────────────────────────────────────────────── */
+.seam-row {
+  padding: 6px 0;
+  border-bottom: 1px solid var(--cabin-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.seam-row:last-child { border-bottom: none; }
+.seam-ts { font-family: monospace; font-size: 10px; color: var(--cabin-dim); }
+
+/* ── Bucket row ────────────────────────────────────────────── */
+.bucket-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--cabin-border);
+  gap: 8px;
+}
+.bucket-row:last-child { border-bottom: none; }
+.bucket-name { font-family: monospace; font-size: var(--cabin-mono-size); }
+.bucket-meta { font-size: 11px; color: var(--cabin-dim); }
+.bucket-disabled { opacity: .45; }
+
+/* ── Empty / loading states ────────────────────────────────── */
+.empty { color: var(--cabin-dim); font-size: 11px; font-style: italic; }
+.loading { color: var(--cabin-dim); font-size: 11px; }
+.error-msg { color: var(--cabin-red); font-size: 11px; }
+
+/* ── Pulse card ────────────────────────────────────────────── */
+.pulse-body {
+  font-family: var(--vscode-editor-font-family, monospace);
+  font-size: var(--cabin-mono-size);
+  white-space: pre-wrap;
+  line-height: 1.6;
+  color: var(--vscode-foreground, #d4d4d4);
+}
+
+.pulse-ts { font-size: 10px; color: var(--cabin-dim); margin-bottom: 6px; }
+
+/* ── Structured hearth card ────────────────────────────────── */
+.card-body { margin-top: 6px; }
+.card-section { margin-bottom: 10px; }
+.card-label {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--cabin-dim);
+  margin-bottom: 3px;
+}
+.card-list {
+  margin: 0;
+  padding-left: 14px;
+  font-size: 11px;
+  line-height: 1.6;
+  color: var(--vscode-foreground, #d4d4d4);
+}
+.card-list li { margin-bottom: 2px; }
+
+.hound-note {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid var(--cabin-border);
+  font-size: 11px;
+  font-style: italic;
+  color: var(--cabin-dim);
+  line-height: 1.5;
+}
+
+/* ── Separator ─────────────────────────────────────────────── */
+.divider {
+  border: none;
+  border-top: 1px solid var(--cabin-border);
+  margin: 8px 0;
+}
