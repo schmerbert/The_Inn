@@ -1,29 +1,51 @@
-# breath — inhale/exhale packet assembly (layer 1 stub).
+# breath — inhale packet assembly; M0.5 ground fitting (layer 3).
 #
-# Stores: packet schema only at M0
-# Refuses: exhale (not implemented layer 1), automation claims before M1
-# Returns: inhale_packet dict
-# Test: manual parity ladder BUILD_SPEC § Breath growth
+# Stores: nothing persistent (reads woods + files + session; touch_inhale writes session)
+# Refuses: exhale (layer 5+)
+# Returns: inhale packet dict — see INHALE_PACKET below; inhale_json() → JSON str
+# Test: tests/hostile/test_compare_drawer_mismatch.py, test_contradiction.py
+#       tests/positive/test_ground_fitting.py, test_cold_wake.py
 
 from __future__ import annotations
 
 import json
+import sqlite3
 from pathlib import Path
 from typing import Any
 
+from inn import forest
+from inn.compare import (
+    list_adoptions_for_ground_path,
+    scan_ground_warnings,
+)
 from inn.errors import BreathRefusal
 from inn.paths import repo_root
 from inn.rooms import list_rooms, load_room
 from inn.session import load as load_session, touch_inhale
+
+# INHALE_PACKET — inhale() / fit_packet() return shape (M0.5, layer 3).
+# Slots cite ids and paths only. Never re-authored prose.
+#
+#   warnings  list[{label, text, path?, ...}]  compare.scan_ground_warnings
+#   ground    list[{room_id, path, adoption_record_ids?, adoption_record_id?, exists?}]
+#   pressure  list[{id, label}]                 open question entry ids
+#   seam      {files_in_flight, last_pair_root_id?}
+#   tools     {wake, shelve}                    shelve only — not forest.adopt
+#
+# Room ↔ woods buckets: ROOM_READ_BUCKETS below (do not duplicate elsewhere).
+ROOM_READ_BUCKETS: dict[str, tuple[str, ...]] = {
+    "manuscript": ("session_pair", "question", "adoption_record"),
+    "study": ("adoption_record", "superseded_canon", "question"),
+    "desk": ("draft",),
+    "visitors": ("visitor_words",),
+}
 
 
 def _read_standing_context(root: Path) -> str:
     path = root / "hearth.json"
     if not path.exists():
         return ""
-    import json as _json
-
-    data = _json.loads(path.read_text(encoding="utf-8"))
+    data = json.loads(path.read_text(encoding="utf-8"))
     return str(data.get("standing_context", "") or "")
 
 
@@ -35,8 +57,88 @@ def _hearth_image_path(root: Path) -> str | None:
     return None
 
 
+def _fit_ground(conn: sqlite3.Connection, root: Path) -> list[dict[str, Any]]:
+    """Index ground rooms: paths + full adoption chain; latest id is drift trailhead."""
+    items: list[dict[str, Any]] = []
+    for room in list_rooms(root):
+        if not room.ground or not room.ground_file:
+            continue
+        rel_path = f"{room.id}/{room.ground_file}"
+        chain = list_adoptions_for_ground_path(conn, rel_path)
+        entry: dict[str, Any] = {
+            "room_id": room.id,
+            "path": rel_path,
+        }
+        if chain:
+            entry["adoption_record_ids"] = chain
+            entry["adoption_record_id"] = chain[-1]  # trailhead for drift compare
+        if (root / rel_path).exists():
+            entry["exists"] = True
+        items.append(entry)
+    return items
+
+
+def _fit_pressure(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+    """Open questions — labeled pressure, not ground."""
+    rows = conn.execute(
+        """
+        SELECT id FROM entries
+        WHERE bucket = 'question' AND visibility != 'sealed'
+        ORDER BY id DESC
+        """
+    ).fetchall()
+    return [{"id": int(row["id"]), "label": "question"} for row in rows]
+
+
+def _fit_warnings(conn: sqlite3.Connection, root: Path) -> list[dict[str, Any]]:
+    """Drawer drift + contradiction gauge (compare.scan_ground_warnings)."""
+    return scan_ground_warnings(root, conn)
+
+
+def _fit_seam(session_seam: dict[str, Any], last_pair_root_id: int | None) -> dict[str, Any]:
+    seam = dict(session_seam)
+    if last_pair_root_id is not None:
+        seam["last_pair_root_id"] = last_pair_root_id
+    return seam
+
+
+def fit_packet(conn: sqlite3.Connection, root: Path) -> dict[str, Any]:
+    """Layer 3 — fill warnings, ground, pressure from woods + ground files."""
+    session = load_session(root)
+    try:
+        room = load_room(session.current_room, root)
+        current_room = {
+            "id": room.id,
+            "label": room.label,
+            "posture": room.posture,
+        }
+    except Exception:
+        current_room = {"id": session.current_room, "label": "", "posture": ""}
+
+    rooms_map = [
+        {"id": r.id, "label": r.label, "posture": r.posture}
+        for r in list_rooms(root)
+    ]
+
+    return {
+        "posture": "guest",
+        "standing_context": _read_standing_context(root),
+        "current_room": current_room,
+        "rooms": rooms_map,
+        "warnings": _fit_warnings(conn, root),
+        "ground": _fit_ground(conn, root),
+        "pressure": _fit_pressure(conn),
+        "seam": _fit_seam(session.seam, session.last_pair_root_id),
+        "tools": {
+            "wake": "python -m inn breathe",
+            "shelve": "inn.shelve.shelve",  # only crossing exposed; not forest.adopt
+        },
+        "hearth_image": _hearth_image_path(root),
+    }
+
+
 def empty_packet(root: Path | None = None) -> dict[str, Any]:
-    """M0 schema — all slots present, unfilled."""
+    """M0 schema — all slots present, unfilled (tests and cold schema check)."""
     root = root or repo_root()
     session = load_session(root)
     try:
@@ -65,17 +167,19 @@ def empty_packet(root: Path | None = None) -> dict[str, Any]:
         "seam": session.seam,
         "tools": {
             "wake": "python -m inn breathe",
-            "shelve": "inn.shelve.shelve",
+            "shelve": "inn.shelve.shelve",  # only crossing exposed; not forest.adopt
         },
         "hearth_image": _hearth_image_path(root),
     }
 
 
 def inhale(root: Path | None = None) -> dict[str, Any]:
-    """M0 — empty fitted packet; records inhale timestamp."""
+    """M0.5 assisted ground fitting (layer 3) — deterministic; cites ids/paths only."""
     root = root or repo_root()
+    forest.init_db(root)  # idempotent; cold wake must not require a prior builder step
     touch_inhale(root)
-    return empty_packet(root)
+    with forest.connect(root) as conn:
+        return fit_packet(conn, root)
 
 
 def exhale(root: Path | None = None) -> dict[str, Any]:

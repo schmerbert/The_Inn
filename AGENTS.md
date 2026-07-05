@@ -44,9 +44,11 @@ Humans may read the code. **Agents must be able to work from it.**
 
 | Done | Not done |
 |------|----------|
-| PREBUILD, FOREST, REGISTERS, SHOWCASE, MAP, PYRAMID | Surfaces, schema, crossings, tests |
-| Design ancestry in `logs/` | First real use |
-| Exemplars in `TheMarble(manual_examples)/` | Inhabitable daily driver |
+| PREBUILD, FOREST, REGISTERS, SHOWCASE, MAP, PYRAMID | First real use |
+| Layers 1–3: registry, schema, shelve, ground fitting | Layers 4–6: breath automation, host, skin |
+| Hostile tests 1–3, 5 + positive suite (17 green) | Hostile 4, 6 (manual/eval) |
+| Design ancestry in `logs/` | Inhabitable daily driver |
+| Exemplars in `TheMarble(manual_examples)/` | faun, visitors, wander, embeddings |
 
 **Build posture: onion layers.** Each layer is a small, honest commit.
 The inn may not be fully inhabitable until late layers. That is correct.
@@ -84,7 +86,7 @@ hostile floor; trench's one-gate refusal pattern.
 |-------|-------------|--------------|
 | **1 — Bones** | dirs, `schema.sql`, ENTRY.md, BUILD.md, hostile test files (red) | No |
 | **2 — Gates** | Shelving crossing; tests 1–3 green | Barely |
-| **3 — Ground** | seed rooms wired; test 5 comparison | Starting |
+| **3 — Ground** | seed rooms wired; test 5 + ground fitting | Starting |
 | **4 — Breath** | pair insert, traverse by hand, BREATH.md | Poorly |
 | **5 — Host** | Claude Code tools/hooks, session capture | Daily driver |
 | **6 — Skin** | faun, visitors, wander, injection machinery | SHOWCASE-true |
@@ -127,31 +129,35 @@ or getting tests red.
 
 ---
 
-## Code layout (target — layer 1 creates empty shape)
+## Code layout (as built — layer 3)
 
 ```text
 TheInn/
   AGENTS.md              ← you are here
   BUILD_SPEC.md          ← authoritative for what to build
   BUILD.md               ← layer state + scope
-  HANDOFF.md             ← guest book; rewrite each layer
+  HANDOFF.md             ← guest book; **Cold worker map** lives here
   ENTRY.md               ← arrival seat for runtime guests
   rooms.yaml             ← room registry (ordered ids)
   PREBUILD.md            ← ancestry; do not edit without cause
-  FOREST.md              ← schema constitution
+  FOREST.md              ← schema lineage (law is woods/schema.sql)
   manuscript/  study/  desk/  visitors/   ← each has room.yaml
   inn/
+    __main__.py          ← python -m inn breathe
+    paths.py             ← repo_root()
+    errors.py            ← refusal exception families
     rooms.py             ← load registry, resolve policy
-    session.py           ← .inn/session.yaml
-    breath.py            ← inhale/exhale packet assembly
-    forest.py            ← insert, refuse, traverse (store)
-    shelve.py            ← crossing to author ground (target_room_id)
-    compare.py           ← drawer vs adoption trail (test 5)
+    session.py           ← .inn/session.yaml → SessionState
+    breath.py            ← inhale/exhale; INHALE_PACKET shape documented
+    forest.py            ← woods insert/refuse; adopt() woods-only
+    shelve.py            ← **only** crossing to author ground files
+    compare.py           ← drawer drift, contradictions, adoption chain
+    seal.py              ← burial stub (raises SealRefusal)
   assets/hearth/         ← hearthstone image slot (layer 6)
   woods/                 ← woods.db lives here; schema.sql committed
   tests/
     hostile/             ← the law, executable
-    positive/
+    positive/            ← happy paths
   hearth.json            ← writer standing_context (layer 4.5)
 ```
 
@@ -193,25 +199,30 @@ not only pytest asserts. Say so in BUILD.md; do not fake them green.
 
 ---
 
-## First session checklist (layer 1)
+## Arriving cold (layers 1–3 done — layer 4 next)
 
-When the human says go:
+When the human says go on layer 4:
 
-1. Read BUILD_SPEC → Layer 1 checklist; HANDOFF live state; FOREST schema
-2. Create `rooms.yaml` + seed `room.yaml` manifests and directory shape
-3. Commit `woods/schema.sql` from FOREST.md
-4. Stub `rooms.py`, `breath.py`, `forest.py`, `shelve.py` — refuse correctly
-5. Write hostile tests 1–3, 5 as **red** specs
-6. Write `ENTRY.md` — room map from registry, wake verb named
-7. Update HANDOFF — layer 1 done, layer 2 next, what's deferred
-8. **Do not** implement faun, breath automation, visitors machinery, or hearth image
+1. Read HANDOFF **Cold worker map** — then BUILD_SPEC layer 4 scope
+2. Read `INHALE_PACKET` in `inn/breath.py` before touching packet slots
+3. Run `python -m pytest tests/hostile tests/positive -q` — must stay green
+4. **Do not** write ground files except through `shelve()`; **do not** use `forest.adopt()` for drawers
+5. Implement layer 4 only: pair insert, manual traverse, `BREATH.md`
+6. Rewrite HANDOFF at layer end — update Cold worker map for anything new
+
+Layers 1–3 checklist (complete — see git history / BUILD.md):
+
+1. `rooms.yaml` + seed `room.yaml`; `woods/schema.sql`; hostile floor
+2. `shelve.py` crossing; tests 1–3 green
+3. `breath.inhale` ground fitting; test 5 + contradictions green
 
 ---
 
 ## Register check before you commit
 
-Ask: *Can a cold instance read HANDOFF, BUILD, BUILD_SPEC layer 1 checklist,
-tests/hostile, and ENTRY — then know where to work and what must refuse?*
+Ask: *Can a cold instance read HANDOFF (Cold worker map), BUILD.md,
+BUILD_SPEC for the target layer, tests/hostile, and ENTRY — then know
+which door to call, what it returns, and what must refuse?*
 
 If no, the layer is not ready. Flatten until yes.
 

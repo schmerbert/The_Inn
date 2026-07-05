@@ -7,6 +7,7 @@ permissions:
     - author_direct
     - shelving
   ground: true
+  ground_file: ground.md
 crossings:
   - shelve
 refuses:

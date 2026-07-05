@@ -16,8 +16,8 @@ Ask, sincerely: **what brings you here?**
 python -m inn breathe
 ```
 
-Returns an inhale packet in context (stub at layer 1 — empty slots, schema only).
-At layer 5 the host calls this on your message.
+Returns an inhale packet in context (M0.5 — warnings, ground index, pressure).
+Fits from woods + ground files; cites ids/paths only. Host automation at layer 5.
 
 ## Rooms
 
@@ -34,9 +34,9 @@ Not rooms: `HANDOFF.md` (guest book), `JOURNAL/` (your voice), `woods/` (custody
 
 ## Crossings
 
-- **Shelving** — author's adopting words, quoted + dated → ground (`inn.shelve`)
-- **Burial** — sealed visibility + stone (layer 3+)
+- **Shelving** — author's adopting words, quoted + dated → ground (`inn.shelve.shelve`)
+- **Burial** — sealed visibility + stone (not implemented; `inn.seal.bury` raises)
 
 ## Builders
 
-`BUILD_SPEC.md` → `HANDOFF.md` → `BUILD.md` → `AGENTS.md`
+`BUILD_SPEC.md` → `HANDOFF.md` (**Cold worker map** — door, returns, tests) → `BUILD.md` → `AGENTS.md`

@@ -1,23 +1,66 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-03 (layer 1 — bones struck)
-Updated by: Cursor builder instance — layer 1 execution
+Last updated: 2026-07-05 (cold-worker pass — layers 2–3 ready to commit)
+Updated by: Cursor builder instance — breath ground fitting
 Last real use: none — no writer session yet
-Current phase: **layer 1 complete**. Layer 2 (Gates) is next.
-Next step: BUILD_SPEC.md → implement `shelve.py` write path; green tests 1–3.
+Current phase: **layer 3 complete**. Layer 4 (Breath) is next.
+Next step: pair insert in real time, manual traverse, `BREATH.md`.
+Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`; session `logs/edd918bc-….md`.
 
 ## Live state (read this first)
 
-**Layer 1 is on disk.** Spec + ground:
+**Layer 3 is on disk.** Breath fits ground:
 
-- `rooms.yaml` + four seed `room.yaml` manifests
-- `woods/schema.sql` (FOREST-aligned + `content_hash`)
-- `inn/` package: `rooms`, `session`, `breath`, `forest`, `shelve`, `compare`, `seal`
-- `python -m inn breathe` → M0 empty packet (schema slots, no fitting)
-- `ENTRY.md` — arrival seat, wake verb, room map
-- Hostile tests 1–3, 5: **refusal paths green**; happy-path / integration **xfail** until layer 2–3
+- `inn/breath.py` — `inhale()` fills `warnings` (compare), `ground` (paths + adoption ids), `pressure` (questions)
+- `inn/compare.py` — `scan_ground_warnings`, `scan_contradictions`, adoption chain queries
+- Contradiction gauge live (within-room, study↔manuscript, superseded-in-file)
+- `source_verbatim` required for manuscript, optional for study (trailheads in code + BUILD_SPEC)
+- `forest.adopt()` woods-only — not in inhale `tools`
+- `python -m pytest tests/hostile tests/positive -q` → **17 passed**
+- `python -m inn breathe` — cold wake works (`init_db` idempotent in inhale)
 
-Run tests: `python -m pytest tests/hostile -q`
+## Cold worker map (where things live)
+
+*Read this block before opening code. One door per dangerous act.*
+
+| Job | Module | Call | Returns |
+|-----|--------|------|---------|
+| Room policy | `inn/rooms.py` | `load_room(id)`, `list_rooms()` | `RoomPolicy` (incl. `ground_file`) |
+| **Shelving → ground** | `inn/shelve.py` | `shelve(room_id, content, adopting_words, …)` | `int` — `adoption_record` entry id |
+| Woods insert | `inn/forest.py` | `insert()`, `insert_pair_root()` | `int` — entry id |
+| Open questions | `inn/forest.py` | `refuse_ground_invention()` | `int` — `question` entry id |
+| ~~Ground files~~ | `inn/forest.py` | `adopt()` | **Not the marble door** — woods ceremony only |
+| Wake / inhale | `inn/breath.py` | `inhale()` | `dict` — see `INHALE_PACKET` in `breath.py` |
+| Drawer + contradiction warnings | `inn/compare.py` | `scan_ground_warnings()` | `list[dict]` — for `packet["warnings"]` |
+| One drawer check | `inn/compare.py` | `check_drawer(path, conn, id)` | `list[dict]` |
+| Adoption chain | `inn/compare.py` | `list_adoptions_for_ground_path()` | `list[int]` ids, oldest first |
+| Session | `inn/session.py` | `load()`, `save()` | `SessionState` |
+| Burial | `inn/seal.py` | `bury()` | raises `SealRefusal` (not built) |
+| CLI wake | `python -m inn breathe` | `inn/__main__.py` | JSON inhale packet on stdout |
+
+**Crossings (authority changes):** only `shelve.py` writes ground markdown.
+**Custody (woods):** only `forest.py` inserts entries.
+**Fitting (packet):** only `breath.py` assembles inhale slots.
+
+**Tests = law:** `tests/hostile/` first; `tests/positive/` shows happy paths.
+Run: `python -m pytest tests/hostile tests/positive -q`
+
+**Layer 4 next:** pair insert in real time, manual traverse, `BREATH.md` — not in this map until built.
+
+**Layer 2 Shelving** (still true):
+
+- `inn/shelve.py` — writes `permissions.ground_file` + `adoption_record`
+- Hostile tests **1–3 green**; `tests/positive/test_shelve_happy.py`
+
+**Layer 1 bones** (still true):
+
+- `rooms.yaml` + seed `room.yaml`; `woods/schema.sql`; `ENTRY.md`
+
+**Schema note:** A 2026-07-03 session hardened `woods/schema.sql` (body_hash,
+DB-enforced append-only, etc.) after work on a standalone Forest package. Good
+ideas adopted here; **no upstream sync obligation**. FOREST.md is lineage;
+`woods/schema.sql` in this repo is the law for The Dog-Ear. See JOURNAL/004
+correction postscript.
 
 **Two subsystems** (unchanged from pass 2 — now partially enacted):
 
@@ -33,8 +76,8 @@ Run tests: `python -m pytest tests/hostile -q`
    memory. **Growth:** manual breath (M1–M2) is the reference impl;
    automation must pass parity — see BUILD_SPEC § Breath growth. Trinity
    malformation (*keep everything, change everything*) is named and refused.
-   Session state: `.inn/session.yaml`. Room↔bucket join + `content_hash` on
-   entries — BUILD_SPEC § Seams closed.
+   Session state: `.inn/session.yaml`. Room↔bucket join + dual hash seam
+   (`body_hash` + `content_hash`) — BUILD_SPEC § Seams closed / § Two hashes.
 
 **Builder read order:** BUILD_SPEC.md → this file → BUILD.md → AGENTS.md.
 Pass 1 (PREBUILD, SHOWCASE, MAP, …) only when BUILD_SPEC points you there.
@@ -255,14 +298,17 @@ paraphrases). One law with many faces: nobody puts words in anyone's mouth.
 - NOTEBOOK.md → JOURNAL.md. Ten policy shadows written (PREBUILD "Condensed
   surfaces"): stores/refuses/returns/warns/test for every surface.
 
-## Next worker — layer 2 only
+## Next worker — layer 4 only
 
-Layer 1 checklist is **done**. Execute layer 2:
+Layer 3 checklist is **done**. Execute layer 4:
 
-1. Implement `shelve.py` write path (room file + `adoption_record` + `content_hash`)
-2. Green hostile tests 1–3 (`xfail` happy paths)
-3. Audit refusals still speak in register
+1. Conversation pair insert in real time (pairs cannot retrofit)
+2. Manual traverse by hand — reference impl before automation
+3. Write `BREATH.md` — manual inhale/exhale procedure
 4. Rewrite this handoff at layer end
+
+Layer 3 recap: `inhale()` → `fit_packet()`; warnings via `compare.scan_ground_warnings`;
+ground slot lists `adoption_record_ids` chain; drift uses latest id only.
 
 First use (layer 4+): not yet.
 

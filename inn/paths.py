@@ -1,3 +1,10 @@
+# paths — repo root resolution for inn package.
+#
+# Stores: nothing
+# Refuses: nothing
+# Returns: Path to repository root (parent of inn/)
+# Test: indirect — all modules use repo_root()
+
 """Shared path resolution."""
 
 from __future__ import annotations

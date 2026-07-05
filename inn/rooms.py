@@ -1,9 +1,9 @@
 # rooms — load room registry and per-room policy manifests.
 #
-# Stores: rooms.yaml, */room.yaml
+# Stores: rooms.yaml, */room.yaml (incl. permissions.ground_file)
 # Refuses: unknown room ids, malformed manifests
-# Returns: RoomPolicy dataclass, registry list
-# Test: tests/hostile/test_shelve_praise_not_adoption.py (via shelve)
+# Returns: RoomPolicy from load_room(); list[RoomPolicy] from list_rooms()
+# Test: tests/hostile/test_shelve_praise_not_adoption.py (via shelve policy)
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ class RoomPolicy:
     posture: str
     write: list[str]
     ground: bool
+    ground_file: str | None
     crossings: list[str]
     refuses: list[str]
     path: Path
@@ -72,12 +73,14 @@ def load_room(room_id: str, root: Path | None = None) -> RoomPolicy:
         raise RoomRefusal(f"room.yaml id mismatch: {data.get('id')} != {room_id}")
 
     perms = data.get("permissions") or {}
+    ground_file = perms.get("ground_file")
     return RoomPolicy(
         id=room_id,
         label=str(data.get("label", room_id)),
         posture=str(data.get("posture", "")).strip(),
         write=_normalize_write(perms.get("write")),
         ground=bool(perms.get("ground", False)),
+        ground_file=str(ground_file).strip() if ground_file else None,
         crossings=list(data.get("crossings") or []),
         refuses=list(data.get("refuses") or []),
         path=room_dir,

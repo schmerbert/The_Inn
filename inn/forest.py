@@ -1,16 +1,26 @@
-# forest — woods insert, refuse, traverse (layer 1 gate).
+# forest — woods insert, refuse, traverse; ceremony primitives.
 #
 # Stores: entries + edges in woods.db
-# Refuses: missing signature, orphan inserts, silent rewrite, delete
-# Returns: entry id on insert
+# Refuses: missing signature, orphan inserts, adoption_record without content_hash, silent rewrite
+# Returns: int entry id on insert; connect/init_db paths; search → list[Row]
 # Test: tests/hostile/test_invented_fact_open_question.py
+#
+# TRAILHEAD — forest.adopt() is woods-only. Ground files: inn.shelve.shelve only.
+#
+# Use (cold worker):
+#   connect(), init_db()           — woods.db (inhale calls init_db every wake)
+#   insert(), insert_pair_root()   — custody entries
+#   refuse_ground_invention()      — invented fact → question bucket
+#   adopt()                        — woods ceremony only — NOT ground markdown
 
 from __future__ import annotations
 
+import hashlib
+import json
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
 from inn.errors import ForestRefusal
 from inn.paths import repo_root
@@ -45,6 +55,17 @@ def init_db(root: Path | None = None) -> None:
         conn.commit()
 
 
+def hash_body(body: str) -> str:
+    return hashlib.sha256(body.encode("utf-8")).hexdigest()
+
+
+def add_edge(conn: sqlite3.Connection, from_id: int, to_id: int, kind: str) -> None:
+    conn.execute(
+        "INSERT OR IGNORE INTO edges (from_id, to_id, kind) VALUES (?, ?, ?)",
+        (from_id, to_id, kind),
+    )
+
+
 def insert(
     conn: sqlite3.Connection,
     *,
@@ -54,6 +75,7 @@ def insert(
     authority: str,
     body: str,
     visibility: str = "open",
+    meta: dict[str, Any] | None = None,
     content_hash: str | None = None,
     origin_to_id: int | None = None,
     origin_kind: str = "spoken_in",
@@ -66,29 +88,36 @@ def insert(
         raise ForestRefusal("empty body")
     if forest not in ("home", "wild"):
         raise ForestRefusal(f"invalid forest: {forest}")
-    if bucket == "adoption_record" and not content_hash:
-        raise ForestRefusal("adoption_record requires content_hash")
-
-    if not is_pair_root and origin_to_id is None:
+    if not is_pair_root and bucket != "session_pair" and origin_to_id is None:
         raise ForestRefusal("orphan insert refused: missing origin edge")
+    if bucket == "adoption_record" and not content_hash:
+        raise ForestRefusal("adoption_record requires content_hash (room file at Shelving)")
 
-    ts = created_at or datetime.now(timezone.utc).isoformat()
+    ts = created_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%fZ")
     cur = conn.execute(
         """
         INSERT INTO entries (
           created_at, forest, bucket, signature, authority, visibility,
-          content_hash, body
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          body, body_hash, content_hash, meta_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
-        (ts, forest, bucket, signature, authority, visibility, content_hash, body),
+        (
+            ts,
+            forest,
+            bucket,
+            signature,
+            authority,
+            visibility,
+            body,
+            hash_body(body),
+            content_hash,
+            json.dumps(meta or {}, sort_keys=True),
+        ),
     )
     entry_id = int(cur.lastrowid)
 
     if origin_to_id is not None:
-        conn.execute(
-            "INSERT INTO edges (from_id, to_id, kind) VALUES (?, ?, ?)",
-            (entry_id, origin_to_id, origin_kind),
-        )
+        add_edge(conn, entry_id, origin_to_id, origin_kind)
 
     return entry_id
 
@@ -138,4 +167,103 @@ def refuse_ground_invention(conn: sqlite3.Connection, *, detail: str, pair_root_
         question=f"OPEN: {detail}",
         signature="model",
         origin_to_id=pair_root_id,
+    )
+
+
+def adopt(
+    conn: sqlite3.Connection,
+    *,
+    adopted_entry_id: int,
+    quote: str,
+    content_hash: str,
+    new_ground_body: str | None = None,
+) -> int:
+    """Woods-only adoption ceremony — NOT the marble Shelving crossing.
+
+    Does not write markdown ground files. Hosts and models must use shelve.py.
+    """
+    record_id = insert(
+        conn,
+        forest="home",
+        bucket="adoption_record",
+        signature="author",
+        authority="record",
+        body=quote,
+        content_hash=content_hash,
+        origin_to_id=adopted_entry_id,
+        origin_kind="adopts",
+    )
+    if new_ground_body:
+        insert(
+            conn,
+            forest="home",
+            bucket="canon",
+            signature="author",
+            authority="ground",
+            body=new_ground_body,
+            origin_to_id=record_id,
+            origin_kind="derived_from",
+        )
+    return record_id
+
+
+def supersede(
+    conn: sqlite3.Connection,
+    *,
+    old_id: int,
+    new_body: str,
+    signature: str = "author",
+) -> int:
+    with conn:
+        new_id = insert(
+            conn,
+            forest="home",
+            bucket="canon",
+            signature=signature,
+            authority="ground",
+            body=new_body,
+            origin_to_id=old_id,
+            origin_kind="supersedes",
+        )
+        conn.execute(
+            "UPDATE entries SET superseded_by = ? WHERE id = ?",
+            (new_id, old_id),
+        )
+        conn.execute(
+            "UPDATE entries SET bucket = 'superseded_canon' WHERE id = ? AND bucket = 'canon'",
+            (old_id,),
+        )
+    return new_id
+
+
+def search(
+    conn: sqlite3.Connection,
+    query: str,
+    *,
+    open_buckets: Iterable[str] | None = None,
+) -> list[sqlite3.Row]:
+    buckets = list(open_buckets or [])
+    conn.execute(
+        "INSERT INTO retrieval_log (query, open_buckets_json) VALUES (?, ?)",
+        (query, json.dumps(buckets)),
+    )
+    params: list[object] = [query]
+    bucket_clause = ""
+    if buckets:
+        placeholders = ",".join("?" for _ in buckets)
+        bucket_clause = f"AND e.bucket IN ({placeholders})"
+        params.extend(buckets)
+    return list(
+        conn.execute(
+            f"""
+            SELECT e.*
+            FROM entries_fts f
+            JOIN entries e ON e.id = f.rowid
+            WHERE entries_fts MATCH ?
+              AND e.visibility != 'sealed'
+              {bucket_clause}
+            ORDER BY rank
+            """,
+            params,
+        )
     )

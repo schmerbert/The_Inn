@@ -5,6 +5,7 @@ posture: |
 permissions:
   write: shelving
   ground: true
+  ground_file: canon.md
 crossings:
   - shelve
 refuses:

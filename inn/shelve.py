@@ -1,20 +1,26 @@
-# shelve — the Shelving crossing to author ground (layer 1 refuses; layer 2 implements).
+# shelve — the Shelving crossing to author ground (one door).
 #
-# Stores: nothing until layer 2 write path
-# Refuses: praise as adoption, paraphrase, unsigned, wrong room, desk→ground
-# Returns: adoption_record id (layer 2+)
+# Stores: room ground files; adoption_record + meta ground_path + cites chain
+# Refuses: praise, paraphrase, unsigned, wrong room, desk→ground, missing ground_file
+#          manuscript without source_verbatim (see TRAILHEAD below)
+# Returns: int — adoption_record entry id in woods.db
 # Test: tests/hostile/test_shelve_praise_not_adoption.py, test_extraction_paraphrase.py
+#       tests/positive/test_shelve_happy.py
+#
+# TRAILHEAD — source_verbatim: required for manuscript; optional for study.
 
 from __future__ import annotations
 
-import hashlib
 import re
 import sqlite3
 from pathlib import Path
 
+from inn import forest
+from inn.compare import latest_adoption_for_ground_path
 from inn.errors import ShelvingRefusal
+from inn.forest import hash_body
 from inn.paths import repo_root
-from inn.rooms import load_room
+from inn.rooms import RoomPolicy, load_room
 
 # Enthusiasm without adoption ceremony — hostile test 1
 _PRAISE_ONLY = re.compile(
@@ -37,6 +43,41 @@ def _is_praise_only(adopting_words: str) -> bool:
     return False
 
 
+def _ground_path(room: RoomPolicy) -> Path:
+    if not room.ground:
+        raise ShelvingRefusal(f"room {room.id!r} is not a ground room")
+    if not room.ground_file:
+        raise ShelvingRefusal(
+            f"room {room.id!r} missing permissions.ground_file in room.yaml"
+        )
+    return room.path / room.ground_file
+
+
+def _append_ground_file(path: Path, content: str) -> str:
+    """Write content to ground file; append when drawer already has text. Returns full file text."""
+    text = content.strip()
+    if not text:
+        raise ShelvingRefusal("empty content")
+
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        existing = path.read_text(encoding="utf-8").strip()
+        if existing:
+            full = f"{existing}\n\n{text}"
+        else:
+            full = text
+    else:
+        full = text
+
+    path.write_text(full, encoding="utf-8")
+    return full
+
+
+def content_hash(text: str) -> str:
+    """SHA256 of room file bytes at Shelving — compare.py uses this for test 5."""
+    return hash_body(text)
+
+
 def shelve(
     target_room_id: str,
     content: str,
@@ -44,15 +85,23 @@ def shelve(
     *,
     author_signature: str = "author",
     source_verbatim: str | None = None,
+    pair_root_id: int | None = None,
     conn: sqlite3.Connection | None = None,
     root: Path | None = None,
 ) -> int:
-    """Cross to author ground. Layer 1: policy refusal only; write path layer 2."""
+    """Cross to author ground in target_room_id.
+
+    One door: validates room policy, writes the ground file, records adoption_record
+    with content_hash (file snapshot) and body_hash (ceremony via forest.insert).
+    """
     root = root or repo_root()
     room = load_room(target_room_id, root)
 
     if not room.allows_crossing("shelve"):
         raise ShelvingRefusal(f"room {target_room_id!r} does not allow shelve crossing")
+
+    if not room.allows_write("shelving"):
+        raise ShelvingRefusal(f"room {target_room_id!r} does not allow shelving writes")
 
     if not adopting_words or not adopting_words.strip():
         raise ShelvingRefusal("missing adopting words")
@@ -63,15 +112,54 @@ def shelve(
     if not content or not content.strip():
         raise ShelvingRefusal("empty content")
 
+    # TRAILHEAD — verbatim source grip (BUILD_SPEC § Shelving)
+    # manuscript: source_verbatim REQUIRED — desk→ground crossing; blocks paraphrase
+    # study: source_verbatim OPTIONAL — author may adopt net-new facts without a draft anchor
+    if "model_unsigned_to_ground" in room.refuses and source_verbatim is None:
+        raise ShelvingRefusal(
+            "manuscript shelving requires source_verbatim — desk drafts cannot cross unsigned"
+        )
+
     if source_verbatim is not None and content.strip() != source_verbatim.strip():
         raise ShelvingRefusal("unsigned words in the author's mouth: content must be verbatim")
 
     if "unsigned" in room.refuses and not author_signature.strip():
         raise ShelvingRefusal("unsigned author")
 
-    # Layer 2: write room file + adoption_record in woods.
-    raise ShelvingRefusal("Shelving write path not implemented until layer 2")
+    ground_path = _ground_path(room)
+    file_text = _append_ground_file(ground_path, content)
+    ceremony = adopting_words.strip()
 
+    def _cross(db: sqlite3.Connection) -> int:
+        origin_id = pair_root_id
+        if origin_id is None:
+            origin_id = forest.insert_pair_root(
+                db,
+                signature=author_signature,
+                body=ceremony,
+            )
+        rel_path = ground_path.relative_to(root).as_posix()
+        prev_id = latest_adoption_for_ground_path(db, rel_path)
+        record_id = forest.insert(
+            db,
+            forest="home",
+            bucket="adoption_record",
+            signature=author_signature,
+            authority="record",
+            body=ceremony,
+            content_hash=content_hash(file_text),
+            meta={"ground_path": rel_path},
+            origin_to_id=origin_id,
+            origin_kind="adopts",
+        )
+        if prev_id is not None:
+            forest.add_edge(db, record_id, prev_id, "cites")
+        return record_id
 
-def content_hash(text: str) -> str:
-    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+    if conn is not None:
+        return _cross(conn)
+
+    with forest.connect(root) as db:
+        record_id = _cross(db)
+        db.commit()
+        return record_id

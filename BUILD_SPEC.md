@@ -161,6 +161,7 @@ posture: |                      # short ambient; ≤ few lines
 permissions:
   write: shelving               # shelving | author_direct | model_signed | deny
   ground: true                  # participates in adoption / compare (test 5)
+  ground_file: canon.md         # required when ground: true; shelve writes here
 crossings: [shelve]             # which crossings may target this room
 refuses: [paraphrase, inference_as_fact, unsigned]
 ```
@@ -278,7 +279,7 @@ mapping in code.
 
 | packet slot | source |
 |-------------|--------|
-| `warnings` | `compare.py` mismatches + contradiction scan on ground rooms |
+| `warnings` | `compare.scan_ground_warnings` — drawer drift + contradiction gauge |
 | `ground` | room files where `permissions.ground` + `adoption_record` ids cited |
 | `pressure` | `question` bucket + open DR notes (labeled, not ground) |
 | `seam` | `session.yaml` + recent `session_pair` traverse from `last_pair_root_id` |
@@ -286,16 +287,43 @@ mapping in code.
 **Rule:** packet slots cite **ids or paths**, never re-authored prose.
 Extraction-only applies to breath — the packet is an index, not a summary.
 
-### `content_hash` — pick: column on `entries`
+### Two hashes (both required)
+
+The woods carry **two** hash columns. They are not interchangeable.
+
+| Column | Scope | Hashes | Set by | Job |
+|--------|-------|--------|--------|-----|
+| `body_hash` | every entry | entry `body` at insert | `forest.py` insert | Custody integrity — prove the woods record was not rewritten |
+| `content_hash` | `adoption_record` only | **linked room file** at Shelving | `shelve.py` crossing | Double-entry bridge — test 5: silent drawer edit after adoption |
+
+**Why both:** The Dog-Ear is two materials — markdown files are ground; woods are
+custody. An `adoption_record` body holds the author's adopting words (ceremony);
+the room file holds the fact on the shelf. `body_hash` fingerprints the ceremony;
+`content_hash` fingerprints the file snapshot at the crossing. Comparing file
+to `body_hash` false-alarms when ceremony ≠ file content.
+
+**Schema authority:** `woods/schema.sql` in this repo is authoritative for The
+Dog-Ear. FOREST.md is lineage and shared pattern vocabulary — not an upstream
+package to sync against. Other Forest implementations are siblings; this inn
+does not anchor to them.
+
+### `content_hash` — on `entries` (adoption bridge)
 
 **Decision:** `content_hash TEXT` column on `entries`, required when
 `bucket = 'adoption_record'`, null otherwise.
 
 - Set at Shelving: hash of target room file at adoption time
-- `compare.py` (test 5): re-hash file; mismatch → `warnings` slot
+- `meta_json.ground_path`: repo-relative drawer path (links record to room file)
+- `compare.py` (test 5): re-hash file; mismatch → `warnings` via `scan_ground_warnings`
 - Do not use edge metadata for v1 — one place to look
 
-Add to `woods/schema.sql` at layer 1.
+Add to `woods/schema.sql` at layer 1 (alongside `body_hash`).
+
+### `body_hash` — on `entries` (custody integrity)
+
+**Decision:** `body_hash TEXT NOT NULL` on every entry. Set automatically at
+insert by `forest.py` (`hash_body(body)`). Not set by callers except via
+insert wrapper. DB trigger `prevent_body_rewrite` refuses body updates.
 
 ---
 
@@ -367,6 +395,7 @@ must pass **parity** with this script. Growth order:
 | Stage | layer | executor | parity test |
 |-------|-------|----------|-------------|
 | **M0 — stub** | 1 | `python -m inn breathe` returns empty schema | slots exist, all null/[] |
+| **M0.5 — assisted ground fitting** | 3 | `inhale()` fills warnings/ground/pressure deterministically | cites ids/paths only; parity with manual script steps 4–6 |
 | **M1 — manual inhale** | 4 | guest fills packet by hand from woods + files | ledger written; cites ids |
 | **M2 — manual full cycle** | 4 | M1 + work + manual exhale + HANDOFF rewrite | one session end-to-end |
 | **M3 — assisted inhale** | 5 | `inn/breath.inhale()` fills slots; guest verifies | output matches M1 ledger |
@@ -447,7 +476,7 @@ TheInn/
     __main__.py             # breathe stub (layer 1)
     session.py              # .inn/session.yaml load/save (layer 1)
     rooms.py                # load registry, resolve policy (layer 1)
-    breath.py               # inhale/exhale packet assembly (layer 1 stub)
+    breath.py               # inhale M0.5 ground fitting; exhale layer 5+
     forest.py               # insert, refuse, traverse
     shelve.py               # the Shelving crossing — target_room_id
     compare.py              # drawer vs adoption trail (test 5)
@@ -462,43 +491,44 @@ TheInn/
 
 ---
 
-## Schema (layer 1 — copy from FOREST)
+## Schema (layer 1 — write from FOREST.md + BUILD_SPEC)
 
-`woods/schema.sql` stays FOREST-aligned for core tables, with one Inn cable
-added now (`content_hash` for adoption records). Core tables:
+`woods/schema.sql` is **authoritative for The Dog-Ear**. Implement from
+FOREST.md (pass 1 constitution) and the seams closed in this file. Other
+Forest packages are separate implementations — useful lineage, not upstream
+to sync against.
+
+Core `entries` shape (abbreviated — full file is authoritative):
 
 ```sql
 CREATE TABLE entries (
   id            INTEGER PRIMARY KEY,
   created_at    TEXT NOT NULL,
-  forest        TEXT NOT NULL,          -- 'home' | 'wild'
-  bucket        TEXT NOT NULL,
+  forest        TEXT NOT NULL CHECK (forest IN ('home','wild')),
+  bucket        TEXT NOT NULL,          -- CHECK list in schema.sql
   signature     TEXT NOT NULL,
-  authority     TEXT NOT NULL,          -- 'ground' | 'model' | 'stranger' | 'hearsay'
-  visibility    TEXT NOT NULL DEFAULT 'open',  -- 'open'|'hidden'|'deep'|'sealed'
+  authority     TEXT NOT NULL,          -- CHECK list in schema.sql
+  visibility    TEXT NOT NULL DEFAULT 'open',
   superseded_by INTEGER REFERENCES entries(id),
-  content_hash  TEXT,                   -- required when bucket='adoption_record'; test 5
-  body          TEXT NOT NULL           -- verbatim only
+  body          TEXT NOT NULL,
+  body_hash     TEXT NOT NULL,          -- SHA256(body) at insert
+  content_hash  TEXT,                   -- SHA256(room file) when bucket='adoption_record'
+  meta_json     TEXT NOT NULL DEFAULT '{}'
 );
 
-CREATE TABLE edges (
-  from_id INTEGER NOT NULL REFERENCES entries(id),
-  to_id   INTEGER NOT NULL REFERENCES entries(id),
-  kind    TEXT NOT NULL
-  -- spoken_in | responds_to | derived_from | adopts | supersedes | cites
-);
-
-CREATE VIRTUAL TABLE entries_fts USING fts5(body, content=entries);
+-- Also: edges (CHECK kinds), retrieval_log, entries_fts, prevent_body_rewrite trigger
 ```
 
 **Insert wrapper (`forest.py`) must refuse:**
 
 - missing `signature`
 - missing origin edge (except conversation-pair roots)
-- silent rewrite (append-only)
+- `adoption_record` without `content_hash`
+- silent rewrite (append-only — DB trigger backs this)
 
-**Layer 3 cable:** `content_hash` on `entries` when `bucket='adoption_record'`
-(set at Shelving; checked by `compare.py`). See § Seams closed.
+**Layer 3 compare:** `content_hash` on `adoption_record` set at Shelving;
+checked by `compare.py` against on-disk room file. `body_hash` is not used
+for drawer comparison. See § Two hashes.
 
 ---
 
@@ -533,6 +563,22 @@ Condensed surfaces (map names to ids: MANUSCRIPT → `manuscript`, etc.).
 provenance + author's adopting words (quoted, dated) + signature trail. AI
 prose: read-back ritual first. Every attempt audited; refusals speak in
 register.
+
+**Verbatim source grip (trailhead):**
+
+| Room | `source_verbatim` | Why |
+|------|-------------------|-----|
+| `manuscript` | **required** | desk→ground crossing; `model_unsigned_to_ground` in refuses |
+| `study` | optional | author may adopt net-new facts without a prior draft anchor |
+
+When `source_verbatim` is passed, `content` must match exactly (paraphrase
+refused). `forest.adopt()` is woods-only — not exposed in inhale `tools`;
+`shelve.py` is the only marble crossing to ground files.
+
+**Adoption chain:** re-shelving the same `ground_path` appends to the file,
+inserts a new `adoption_record`, and adds a `cites` edge to the previous
+record. Drift compare uses the **latest** snapshot only; `ground` slot lists
+the full `adoption_record_ids` chain.
 
 ### Burial (`seal.py` — layer 3+)
 
@@ -670,7 +716,7 @@ Not for: schema, mkdir, red tests.
 
 - [ ] WRITE `rooms.yaml` + seed `room.yaml` for manuscript, study, desk, visitors
 - [ ] CREATE room dirs, `woods/`, `assets/hearth/`, `inn/`, `tests/hostile/`
-- [ ] WRITE `woods/schema.sql` from FOREST.md + `content_hash` column
+- [ ] WRITE `woods/schema.sql` from FOREST.md + BUILD_SPEC seams
 - [ ] CREATE `.inn/` dir (session state; gitignore `session.yaml`)
 - [ ] STUB `inn/session.py` — load/save session.yaml, validate room id
 - [ ] WRITE `hearth.json` placeholder `{ "standing_context": "" }`

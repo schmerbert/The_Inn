@@ -12,6 +12,7 @@ and harness plumbing are omitted; user and assistant words are kept.
 | `e50495bc-…` | Fable 5 | 1 | Third stay — MAP survey, PYRAMID, tests 5–6 |
 | `d0aae6a7-…` | Cursor | 2 | Builder hardening — BUILD_SPEC, AGENTS, unveil |
 | `f35f9d8e-…` | Cursor | 2 | Layer 1 bones — rooms, breath, hostile floor, doc cleanup |
+| `edd918bc-…` | Cursor | 2 | Layers 2–3 gates and ground; cold-worker pass; commit-ready |
 
 Raw `.jsonl` sources (unsanitized) live in `.source/` (gitignored, local only).
 Run `python tools/sanitize_logs.py` after manual edits to published logs.

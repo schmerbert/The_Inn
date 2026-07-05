@@ -2,7 +2,7 @@
 #
 # Stores: current_room, proximity, seam, last_pair_root_id
 # Refuses: invalid room ids on save
-# Returns: SessionState dict
+# Returns: SessionState dataclass (load, set_room, touch_inhale)
 # Test: tests/hostile/ (indirect via breath)
 
 from __future__ import annotations
