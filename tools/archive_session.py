@@ -12,6 +12,7 @@ Usage:
     python archive_session.py <session.jsonl> [output.md] [--note "…"]
 
 If output is omitted, writes to ../logs/<jsonl-stem>.md.
+Pass an explicit output path (e.g. ../logs/2026-07-05-slug.md) for readable names on GitHub.
 Archives the source jsonl to ../logs/.source/ (gitignored).
 Runs sanitize_logs on the published copy.
 

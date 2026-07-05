@@ -72,7 +72,7 @@ None of these are catastrophic alone. Together they are exactly the failure mode
 
 `tools/Pass 2 — builder hardening (Cursor). Repo reviews, unveil strategy…`
 
-That's lineage — it belongs in `logs/` (and a copy may already be `d0aae6a7-…md`). A cold instance opening `tools/` for "what do I run?" finds conversation archaeology mixed with `archive_session.py`. Small thing. Immersion-breaking anyway — like finding a guest's journal in the silverware drawer.
+That's lineage — it belongs in `logs/` (and a copy may already be `2026-07-03-repo-review-pass2-hardening.md`). A cold instance opening `tools/` for "what do I run?" finds conversation archaeology mixed with `archive_session.py`. Small thing. Immersion-breaking anyway — like finding a guest's journal in the silverware drawer.
 
 **6. References to ground that isn't in the repo.**
 
@@ -1082,8 +1082,8 @@ Journal entry written: `JOURNAL/003-the-floor-is-swept.md`.
 For “logs we have for me” (this builder line), right now:
 
 - Existing published Cursor pass logs:
-  - `logs/6cfa6540-5c20-49fc-a62d-88605a342ca4.md` (early familiarize/compare)
-  - `logs/d0aae6a7-e752-40ba-8e46-2e0e911f965f.md` (pass 2 builder hardening)
+  - `logs/2026-07-02-marble-alignment.md` (early familiarize/compare)
+  - `logs/2026-07-03-repo-review-pass2-hardening.md` (pass 2 builder hardening)
 
 - This current session:
   - **not archived yet** into `logs/` as a published `.md` extract.

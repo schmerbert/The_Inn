@@ -38,6 +38,11 @@
 
 **Next layer:** 4 — Breath. Pair insert in real time, manual traverse, `BREATH.md`.
 
+**After layer 4 (owner):** first real stay — live testing + friction fixing with
+writer prose (short story excerpt); M2 reference session archived. See HANDOFF
+§ After layer 4. API key and daily-driver inhabitability are **layer 5 Host**,
+not layer 4.
+
 ---
 
 ## Layer 2 deliverables (complete)
@@ -59,7 +64,9 @@
 - **Cold worker map** in HANDOFF.md — module → door → returns; `INHALE_PACKET` in `breath.py`.
 - **Seams closed:** `session.yaml`, room↔bucket table, dual hash (`body_hash` + `content_hash`).
 - **Schema authority:** `woods/schema.sql` here — FOREST.md is lineage only.
-- Last real use: still none. Hostile tests 4 and 6 remain manual/eval work.
+- Last real use: still none. **Post–layer 4:** owner runs first real stay (HANDOFF § After layer 4).
+- Hostile tests 4 and 6 remain manual/eval — not built.
+- **API key:** layer 5 Host only; layer 4 = CLI + manual breath, no model loop required.
 
 ---
 
@@ -69,4 +76,4 @@ Layer 0.5–2 notes preserved in git history and BUILD_SPEC/HANDOFF.
 
 ---
 
-*Updated: 2026-07-05 — cold-worker pass before commit (layers 2–3).*
+*Updated: 2026-07-05 — layer 4 plan + first real stay noted.*

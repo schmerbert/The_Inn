@@ -1,11 +1,34 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-05 (cold-worker pass — layers 2–3 ready to commit)
+Last updated: 2026-07-05 (post-push — layer 4 plan + first real stay noted)
 Updated by: Cursor builder instance — breath ground fitting
 Last real use: none — no writer session yet
 Current phase: **layer 3 complete**. Layer 4 (Breath) is next.
 Next step: pair insert in real time, manual traverse, `BREATH.md`.
-Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`; session `logs/edd918bc-….md`.
+Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`; session `logs/2026-07-04-layers-2-3-gates-ground.md`.
+
+## After layer 4 — first real stay (owner decision)
+
+**When layer 4 closes**, the owner will run **live testing and friction fixing**
+— not more pytest theater. A real reference session (short story on the desk /
+manuscript, manual M1–M2 breath, shelve ceremony, tamper-and-warn, session
+archived to `logs/`). Clinical fixtures stay in `tests/`; writer prose stays
+local unless explicitly shared.
+
+**Inhabitable when?**
+
+| Layer | Posture | API key? |
+|-------|---------|----------|
+| **4 — Breath** | **Poorly** — manual traverse, `BREATH.md`, M2 reference session | **No** — CLI `python -m inn breathe`, shelve by hand/script, pair insert when built |
+| **5 — Host** | **Daily driver** — wake coupling, hooks, session capture in the loop | **Yes** — host calls model (Claude Code / API per BUILD_SPEC); inhale as tool return |
+
+Layer 4 earns *trust the manual path*. Layer 5 earns *live in the loop*.
+Do not skip the post–layer-4 stay for API wiring — friction found there
+(feedback register, seam, shelve awkwardness) should land in HANDOFF before
+host automation.
+
+**Test data rule:** hostile/positive tests keep minimal clinical strings;
+the reference session uses the owner's short story excerpt — separate tracks.
 
 ## Live state (read this first)
 
