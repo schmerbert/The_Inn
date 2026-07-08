@@ -1,6 +1,6 @@
 # breath — inhale packet assembly; M0.5 ground fitting (layer 3).
 #
-# Stores: nothing persistent (reads woods + files + session; touch_inhale writes session)
+# Stores: session touch_inhale + logs/breath inhale receipts
 # Refuses: exhale (layer 5+)
 # Returns: inhale packet dict — see INHALE_PACKET below; inhale_json() → JSON str
 # Test: tests/hostile/test_compare_drawer_mismatch.py, test_contradiction.py
@@ -10,10 +10,12 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import time
 from pathlib import Path
 from typing import Any
 
 from inn import forest
+from inn import breath_ledger
 from inn.compare import (
     list_adoptions_for_ground_path,
     scan_ground_warnings,
@@ -102,7 +104,11 @@ def _fit_seam(session_seam: dict[str, Any], last_pair_root_id: int | None) -> di
     return seam
 
 
-def fit_packet(conn: sqlite3.Connection, root: Path) -> dict[str, Any]:
+def fit_packet(
+    conn: sqlite3.Connection,
+    root: Path,
+    timings_ms: dict[str, float] | None = None,
+) -> dict[str, Any]:
     """Layer 3 — fill warnings, ground, pressure from woods + ground files."""
     session = load_session(root)
     try:
@@ -120,14 +126,29 @@ def fit_packet(conn: sqlite3.Connection, root: Path) -> dict[str, Any]:
         for r in list_rooms(root)
     ]
 
+    t_warnings = time.perf_counter()
+    warnings = _fit_warnings(conn, root)
+    if timings_ms is not None:
+        timings_ms["warnings"] = round((time.perf_counter() - t_warnings) * 1000, 3)
+
+    t_ground = time.perf_counter()
+    ground = _fit_ground(conn, root)
+    if timings_ms is not None:
+        timings_ms["ground"] = round((time.perf_counter() - t_ground) * 1000, 3)
+
+    t_pressure = time.perf_counter()
+    pressure = _fit_pressure(conn)
+    if timings_ms is not None:
+        timings_ms["pressure"] = round((time.perf_counter() - t_pressure) * 1000, 3)
+
     return {
         "posture": "guest",
         "standing_context": _read_standing_context(root),
         "current_room": current_room,
         "rooms": rooms_map,
-        "warnings": _fit_warnings(conn, root),
-        "ground": _fit_ground(conn, root),
-        "pressure": _fit_pressure(conn),
+        "warnings": warnings,
+        "ground": ground,
+        "pressure": pressure,
         "seam": _fit_seam(session.seam, session.last_pair_root_id),
         "tools": {
             "wake": "python -m inn breathe",
@@ -178,9 +199,13 @@ def inhale(root: Path | None = None) -> dict[str, Any]:
     root = root or repo_root()
     forest.init_db(root)  # idempotent; cold wake must not require a prior builder step
     touch_inhale(root)
+    timings_ms: dict[str, float] = {}
+    t_total = time.perf_counter()
     with forest.connect(root) as conn:
-        # Layer 4 trailhead: add stage timings + append-only receipt via inn.breath_ledger.
-        return fit_packet(conn, root)
+        packet = fit_packet(conn, root, timings_ms=timings_ms)
+    timings_ms["total"] = round((time.perf_counter() - t_total) * 1000, 3)
+    breath_ledger.write_receipt(packet, root, timings_ms=timings_ms)
+    return packet
 
 
 def exhale(root: Path | None = None) -> dict[str, Any]:

@@ -66,9 +66,9 @@ the parity spec automation must pass.
 
 - [x] `inn/breath_ledger.py` — append-only receipt writer (`logs/breath/`) *(stub landed 2026-07-08)*
 - [x] `logs/breath/README.md` — one line: slot → id/path map per wake; not prose
-- [ ] `inhale()` stage timings — ms per slot (`warnings`, `ground`, `pressure`, total)
-- [ ] Receipt per wake — log slot ids filled; same shape manual M1 step 8 would write
-- [ ] `tests/positive/test_breath_ledger.py` — wake writes one receipt; cites ids only
+- [x] `inhale()` stage timings — ms per slot (`warnings`, `ground`, `pressure`, total)
+- [x] Receipt per wake — log slot ids filled; same shape manual M1 step 8 would write
+- [x] `tests/positive/test_breath_ledger.py` — wake writes one receipt; cites ids only
 - [ ] `tests/positive/test_inhale_deterministic.py` — same woods + session → same packet
 
 **Pick at layer 4:** `logs/breath/` append-only (no schema migration). Automation
