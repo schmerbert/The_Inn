@@ -80,8 +80,23 @@ def _fit_ground(conn: sqlite3.Connection, root: Path) -> list[dict[str, Any]]:
     return items
 
 
-def _fit_pressure(conn: sqlite3.Connection) -> list[dict[str, Any]]:
+def _fit_pressure(conn: sqlite3.Connection, last_pair_root_id: int | None = None) -> list[dict[str, Any]]:
     """Open questions — labeled pressure, not ground."""
+    if last_pair_root_id is not None:
+        related_ids = forest.related_descendants(conn, root_id=last_pair_root_id)
+        if related_ids:
+            placeholders = ",".join("?" for _ in related_ids)
+            rows = conn.execute(
+                f"""
+                SELECT id FROM entries
+                WHERE bucket = 'question' AND visibility != 'sealed'
+                  AND id IN ({placeholders})
+                ORDER BY id DESC
+                """,
+                related_ids,
+            ).fetchall()
+            return [{"id": int(row["id"]), "label": "question"} for row in rows]
+
     rows = conn.execute(
         """
         SELECT id FROM entries
@@ -137,7 +152,7 @@ def fit_packet(
         timings_ms["ground"] = round((time.perf_counter() - t_ground) * 1000, 3)
 
     t_pressure = time.perf_counter()
-    pressure = _fit_pressure(conn)
+    pressure = _fit_pressure(conn, session.last_pair_root_id)
     if timings_ms is not None:
         timings_ms["pressure"] = round((time.perf_counter() - t_pressure) * 1000, 3)
 

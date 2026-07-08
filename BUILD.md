@@ -57,7 +57,7 @@ the parity spec automation must pass.
 ### Core (M1–M2 manual breath)
 
 - [x] `forest.insert_pair` — real-time pair insert at message ingest (woods custody)
-- [ ] Manual traverse by proximity from `last_pair_root_id` — document in `BREATH.md`
+- [x] Manual traverse by proximity from `last_pair_root_id` — document in `BREATH.md`
 - [x] `BREATH.md` — M1 inhale script + M2 exhale script (BUILD_SPEC ladder) *(initial layer-4 scaffold landed)*
 - [ ] Reference session script in `BREATH.md` — owner M2 walkthrough checklist
 - [x] `tests/positive/test_pair_insert.py` — pair lands in woods with signature
@@ -69,7 +69,7 @@ the parity spec automation must pass.
 - [x] `inhale()` stage timings — ms per slot (`warnings`, `ground`, `pressure`, total)
 - [x] Receipt per wake — log slot ids filled; same shape manual M1 step 8 would write
 - [x] `tests/positive/test_breath_ledger.py` — wake writes one receipt; cites ids only
-- [ ] `tests/positive/test_inhale_deterministic.py` — same woods + session → same packet
+- [x] `tests/positive/test_inhale_deterministic.py` — same woods + session → same packet
 
 **Pick at layer 4:** `logs/breath/` append-only (no schema migration). Automation
 at layer 5 must produce receipts a human would have written in M1.

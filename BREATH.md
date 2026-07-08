@@ -10,7 +10,8 @@ Automation in layer 5+ must match this procedure, not replace it semantically.
 3. Read `hearth.json` (`standing_context`).
 4. Run compare warnings on ground rooms (drift + contradiction warnings).
 5. List relevant ground adoption ids/paths from proximity.
-6. List open questions (`question` bucket) near proximity.
+6. List open questions (`question` bucket) near proximity, traversing from
+   `last_pair_root_id` when present.
 7. Copy seam fields (`files_in_flight`, `last_pair_root_id`).
 8. Write a receipt in `logs/breath/` (slot ids/counts only; no prose).
 

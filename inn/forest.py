@@ -11,6 +11,7 @@
 #   connect(), init_db()           — woods.db (inhale calls init_db every wake)
 #   insert(), insert_pair_root()   — custody entries
 #   insert_pair()                  — helper for real-time message ingest (layer 4)
+#   related_descendants()          — traverse from last_pair_root_id for proximity fitting
 #   refuse_ground_invention()      — invented fact → question bucket
 #   adopt()                        — woods ceremony only — NOT ground markdown
 
@@ -177,6 +178,30 @@ def insert_pair(
         )
 
     return pair_root_id, response_id
+
+
+def related_descendants(
+    conn: sqlite3.Connection,
+    *,
+    root_id: int,
+    max_hops: int = 6,
+) -> list[int]:
+    """List descendant entry ids reachable via edges from an ancestor root id."""
+    rows = conn.execute(
+        """
+        WITH RECURSIVE chain(id, depth) AS (
+          SELECT ?, 0
+          UNION
+          SELECT e.from_id, chain.depth + 1
+          FROM edges e
+          JOIN chain ON e.to_id = chain.id
+          WHERE chain.depth < ?
+        )
+        SELECT DISTINCT id FROM chain ORDER BY id ASC
+        """,
+        (root_id, max_hops),
+    ).fetchall()
+    return [int(row["id"]) for row in rows]
 
 
 def open_question(
