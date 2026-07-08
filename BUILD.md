@@ -56,11 +56,11 @@ the parity spec automation must pass.
 
 ### Core (M1–M2 manual breath)
 
-- [ ] `forest.insert_pair` — real-time pair insert at message ingest (woods custody)
+- [x] `forest.insert_pair` — real-time pair insert at message ingest (woods custody)
 - [ ] Manual traverse by proximity from `last_pair_root_id` — document in `BREATH.md`
-- [ ] `BREATH.md` — M1 inhale script + M2 exhale script (BUILD_SPEC ladder)
+- [x] `BREATH.md` — M1 inhale script + M2 exhale script (BUILD_SPEC ladder) *(initial layer-4 scaffold landed)*
 - [ ] Reference session script in `BREATH.md` — owner M2 walkthrough checklist
-- [ ] `tests/positive/test_pair_insert.py` — pair lands in woods with signature
+- [x] `tests/positive/test_pair_insert.py` — pair lands in woods with signature
 
 ### Observability floor (pave for 4.5 — build with layer 4, not after)
 

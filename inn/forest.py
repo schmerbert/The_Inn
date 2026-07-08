@@ -10,6 +10,7 @@
 # Use (cold worker):
 #   connect(), init_db()           — woods.db (inhale calls init_db every wake)
 #   insert(), insert_pair_root()   — custody entries
+#   insert_pair()                  — helper for real-time message ingest (layer 4)
 #   refuse_ground_invention()      — invented fact → question bucket
 #   adopt()                        — woods ceremony only — NOT ground markdown
 
@@ -138,6 +139,44 @@ def insert_pair_root(
         body=body,
         is_pair_root=True,
     )
+
+
+def insert_pair(
+    conn: sqlite3.Connection,
+    *,
+    guest_words: str,
+    innkeeper_words: str | None = None,
+    guest_signature: str = "guest",
+    innkeeper_signature: str = "model",
+) -> tuple[int, int | None]:
+    """Insert one conversational pair in real time (layer 4 trailhead).
+
+    Returns `(pair_root_id, response_id_or_none)`.
+    """
+    pair_root_id = insert(
+        conn,
+        forest="home",
+        bucket="session_pair",
+        signature=guest_signature,
+        authority="stranger",
+        body=guest_words,
+        is_pair_root=True,
+    )
+
+    response_id: int | None = None
+    if innkeeper_words is not None and innkeeper_words.strip():
+        response_id = insert(
+            conn,
+            forest="home",
+            bucket="session_pair",
+            signature=innkeeper_signature,
+            authority="model",
+            body=innkeeper_words,
+            origin_to_id=pair_root_id,
+            origin_kind="responds_to",
+        )
+
+    return pair_root_id, response_id
 
 
 def open_question(
