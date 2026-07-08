@@ -5,7 +5,7 @@
 
 ---
 
-## Current layer: **3 — Ground** (complete)
+## Current layer: **4 — Breath** (in progress)
 
 | Layer | Status | Commit |
 |-------|--------|--------|
@@ -14,7 +14,7 @@
 | 1 — Bones | complete | rooms registry, schema, stubs, hostile floor |
 | 2 — Gates | complete | `shelve.py` write path; tests 1–3 green |
 | **3 — Ground** | **complete** | breath ground fitting; test 5 inhale green |
-| **4 — Breath** | **next** | pair insert, traverse, `BREATH.md`, breath ledger + inhale timings |
+| **4 — Breath** | **in progress** | pair insert, traverse, `BREATH.md`, breath ledger + inhale timings |
 | 4.5 — Responsiveness | pending | diegetic latency, packet receipts, lookup vs crossing SLOs |
 | 5 — Host | pending | wake coupling, TTFT/streaming gates, tool timeouts |
 | 6 — Skin | pending | — |
@@ -34,9 +34,10 @@
 - [x] `tests/positive/test_ground_fitting.py`
 - [x] `tests/positive/test_cold_wake.py` — `python -m inn breathe` without prior init
 
-**Test state:** `python -m pytest tests/hostile tests/positive -q` → **17 passed**
+**Test state:** `python -m pytest tests/hostile tests/positive -q` → **21 passed**
 
-**Next layer:** 4 — Breath (core + observability floor). See deliverables below.
+**Next step:** close remaining Layer 4 manual items, run one M2 reference stay,
+then decide Layer 5 scope from observed friction.
 
 **After layer 4 (owner):** first real stay — live testing + friction fixing with
 writer prose (short story excerpt); M2 reference session archived. See HANDOFF
@@ -74,7 +75,7 @@ the parity spec automation must pass.
 **Pick at layer 4:** `logs/breath/` append-only (no schema migration). Automation
 at layer 5 must produce receipts a human would have written in M1.
 
-**Test state target:** prior 17 green + new positive tests above.
+**Test state target:** maintain 21 green while finishing manual-layer checks.
 
 ---
 
@@ -168,4 +169,4 @@ Layer 0.5–2 notes preserved in git history and BUILD_SPEC/HANDOFF.
 
 ---
 
-*Updated: 2026-07-08 — layer 4/4.5/5 paved roadmap (responsiveness checklist → deliverables).*
+*Updated: 2026-07-08 — layer 4 in progress; proximity + determinism + receipt floor landed.*

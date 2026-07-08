@@ -1,11 +1,11 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-05 (post-push — layer 4 plan + first real stay noted)
-Updated by: Cursor builder instance — breath ground fitting
+Last updated: 2026-07-08 (layer 4 slices landed; manual reference stay next)
+Updated by: Cursor builder instance — layer 4 breath fitting
 Last real use: none — no writer session yet
-Current phase: **layer 3 complete**. Layer 4 (Breath) is next.
-Next step: pair insert in real time, manual traverse, `BREATH.md`.
-Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`; session `logs/2026-07-04-layers-2-3-gates-ground.md`.
+Current phase: **layer 4 in progress** (pair insert, receipts, proximity pressure fitting).
+Next step: run one manual M2 reference stay and log friction before layer 5 host wiring.
+Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`, `JOURNAL/006-the-pressure-seam-is-real.md`; session `logs/07-2026-07-04-layers-2-3-gates-ground.md`.
 
 ## After layer 4 — first real stay (owner decision)
 
@@ -19,7 +19,7 @@ local unless explicitly shared.
 
 | Layer | Posture | API key? |
 |-------|---------|----------|
-| **4 — Breath** | **Poorly** — manual traverse, `BREATH.md`, M2 reference session | **No** — CLI `python -m inn breathe`, shelve by hand/script, pair insert when built |
+| **4 — Breath** | **Poorly** — manual traverse, `BREATH.md`, M2 reference session | **No** — CLI `python -m inn breathe`, shelve by hand/script, pair insert trailhead live |
 | **5 — Host** | **Daily driver** — wake coupling, hooks, session capture in the loop | **Yes** — host calls model (Claude Code / API per BUILD_SPEC); inhale as tool return |
 
 Layer 4 earns *trust the manual path*. Layer 5 earns *live in the loop*.
@@ -32,14 +32,20 @@ the reference session uses the owner's short story excerpt — separate tracks.
 
 ## Live state (read this first)
 
-**Layer 3 is on disk.** Breath fits ground:
+**Layer 4 slices are on disk.** Breath now fits ground with pressure proximity:
 
 - `inn/breath.py` — `inhale()` fills `warnings` (compare), `ground` (paths + adoption ids), `pressure` (questions)
 - `inn/compare.py` — `scan_ground_warnings`, `scan_contradictions`, adoption chain queries
 - Contradiction gauge live (within-room, study↔manuscript, superseded-in-file)
 - `source_verbatim` required for manuscript, optional for study (trailheads in code + BUILD_SPEC)
 - `forest.adopt()` woods-only — not in inhale `tools`
-- `python -m pytest tests/hostile tests/positive -q` → **17 passed**
+- `forest.insert_pair()` trailhead + `tests/positive/test_pair_insert.py`
+- `inn/breath_ledger.py` receipts + inhale stage timings in `inhale()`
+- pressure fitting traverses from `session.last_pair_root_id` (`forest.related_descendants`)
+- deterministic + proximity tests live:
+  - `tests/positive/test_inhale_deterministic.py`
+  - `tests/positive/test_pressure_proximity.py`
+- `python -m pytest tests/hostile tests/positive -q` → **21 passed**
 - `python -m inn breathe` — cold wake works (`init_db` idempotent in inhale)
 
 ## Cold worker map (where things live)
@@ -50,8 +56,8 @@ the reference session uses the owner's short story excerpt — separate tracks.
 |-----|--------|------|---------|
 | Room policy | `inn/rooms.py` | `load_room(id)`, `list_rooms()` | `RoomPolicy` (incl. `ground_file`) |
 | **Shelving → ground** | `inn/shelve.py` | `shelve(room_id, content, adopting_words, …)` | `int` — `adoption_record` entry id |
-| Woods insert | `inn/forest.py` | `insert()`, `insert_pair_root()` | `int` — entry id |
-| Open questions | `inn/forest.py` | `refuse_ground_invention()` | `int` — `question` entry id |
+| Woods insert | `inn/forest.py` | `insert()`, `insert_pair_root()`, `insert_pair()` | `int` — entry id / pair ids |
+| Open questions | `inn/forest.py` | `refuse_ground_invention()`, `related_descendants()` | `int` / `list[int]` |
 | ~~Ground files~~ | `inn/forest.py` | `adopt()` | **Not the marble door** — woods ceremony only |
 | Wake / inhale | `inn/breath.py` | `inhale()` | `dict` — see `INHALE_PACKET` in `breath.py` |
 | Drawer + contradiction warnings | `inn/compare.py` | `scan_ground_warnings()` | `list[dict]` — for `packet["warnings"]` |
@@ -70,7 +76,8 @@ the reference session uses the owner's short story excerpt — separate tracks.
 **Tests = law:** `tests/hostile/` first; `tests/positive/` shows happy paths.
 Run: `python -m pytest tests/hostile tests/positive -q`
 
-**Layer 4 next:** pair insert, manual traverse, `BREATH.md`, breath ledger — full checklist in **BUILD.md** § Layer 4–4.5 (paved roadmap; responsiveness gates mapped to files/tests).
+**Layer 4 next:** run manual M2 reference session with short story excerpt; capture
+friction in `logs/` + HANDOFF, then scope layer 5 host contract from trace.
 
 **Layer 2 Shelving** (still true):
 
