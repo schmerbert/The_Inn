@@ -644,6 +644,51 @@ register for mid-session surfacing. Grammar doubles as progress indicator.
 
 ---
 
+## AI optimization checklist (professional vs slop)
+
+Use this as a build and review gate. "Professional" means the same user
+task feels predictable, responsive, and evidence-grounded across runs.
+"Slop" is usually not one bug; it is missing discipline at several layers.
+
+### Necessary (must-have before calling it production-ready)
+
+| Area | Professional behavior | Slop signal | Minimum gate |
+|------|------------------------|-------------|--------------|
+| **TTFT / first breath** | first token appears quickly and consistently | long blank stall before any text | measure p50/p95 wake TTFT and set fail threshold |
+| **Packet fit discipline** | inhale packet assembled once, labeled, traceable | repeated hidden re-fit of context mid-turn | one `inhale()` receipt per wake with slot ids |
+| **Prompt/context budget** | stable blocks cached; volatile blocks bounded | every turn repays full prompt cost | cache-hit metric + max context bytes per turn |
+| **Crossing latency separation** | lookups feel fast; authority crossings stay deliberate | everything slow, or dangerous gates made "fast" | separate SLOs: lookup vs crossing |
+| **Tool reliability** | bounded retries, explicit timeout behavior | hangs, silent retries, random long tails | p95/p99 tool latency + timeout receipts |
+| **Deterministic refusal path** | when blocked, refusal explains structure + next valid move | vague refusal loops ("try again") | hostile tests for each refusal class |
+| **Streaming quality** | output begins early and stays paced | bursty dump after delay | stream chunk cadence logged (no end-only render) |
+| **Observability** | stage timings visible (fit/retrieve/model/emit) | "it feels slow" with no stage traces | per-turn timing envelope in logs |
+
+### Nice-to-have (high leverage after the floor is stable)
+
+| Area | Why it helps | Not required yet |
+|------|---------------|------------------|
+| **Speculative retrieval** | hide lookup latency behind drafting | yes |
+| **Model routing by task class** | faster cheap turns, expensive model only when needed | yes |
+| **Adaptive compression cadence** | keep constant envelope as history grows | yes |
+| **Prefetch from room posture** | likely-next lookups ready before explicit ask | yes |
+| **Parallel tool fanout** | reduce tail on multi-source checks | yes |
+| **Token-level cache warming** | improve repeated wake/path performance | yes |
+
+### Layer mapping (where this belongs)
+
+- **Layer 4/4.5:** TTFT, packet discipline, crossing-vs-lookup split,
+  timeout receipts, stage timings.
+- **Layer 5:** host-level streaming cadence, retries/backoff policy, p95/p99
+  dashboards in logs.
+- **Layer 6+:** routing, speculative retrieval, adaptive compression.
+
+### Non-negotiable bar
+
+If someone calls the build "slop," ask which gate failed and require trace.
+Vibe-only criticism does not pass this checklist; stage evidence does.
+
+---
+
 ## Borrow from cabin (patterns, not organs)
 
 | Pattern | Source | Use |

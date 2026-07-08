@@ -179,6 +179,7 @@ def inhale(root: Path | None = None) -> dict[str, Any]:
     forest.init_db(root)  # idempotent; cold wake must not require a prior builder step
     touch_inhale(root)
     with forest.connect(root) as conn:
+        # Layer 4 trailhead: add stage timings + append-only receipt via inn.breath_ledger.
         return fit_packet(conn, root)
 
 

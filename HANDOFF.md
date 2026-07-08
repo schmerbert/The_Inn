@@ -60,6 +60,8 @@ the reference session uses the owner's short story excerpt — separate tracks.
 | Session | `inn/session.py` | `load()`, `save()` | `SessionState` |
 | Burial | `inn/seal.py` | `bury()` | raises `SealRefusal` (not built) |
 | CLI wake | `python -m inn breathe` | `inn/__main__.py` | JSON inhale packet on stdout |
+| Breath ledger *(layer 4)* | `inn/breath_ledger.py` | `write_receipt(packet, timings)` | path under `logs/breath/` |
+| Inhale timings *(layer 4)* | `inn/breath.py` | `inhale()` | packet + timings in receipt |
 
 **Crossings (authority changes):** only `shelve.py` writes ground markdown.
 **Custody (woods):** only `forest.py` inserts entries.
@@ -68,7 +70,7 @@ the reference session uses the owner's short story excerpt — separate tracks.
 **Tests = law:** `tests/hostile/` first; `tests/positive/` shows happy paths.
 Run: `python -m pytest tests/hostile tests/positive -q`
 
-**Layer 4 next:** pair insert in real time, manual traverse, `BREATH.md` — not in this map until built.
+**Layer 4 next:** pair insert, manual traverse, `BREATH.md`, breath ledger — full checklist in **BUILD.md** § Layer 4–4.5 (paved roadmap; responsiveness gates mapped to files/tests).
 
 **Layer 2 Shelving** (still true):
 
