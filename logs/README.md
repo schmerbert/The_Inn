@@ -15,6 +15,9 @@ Files are named `NN-YYYY-MM-DD-slug.md` where `NN` is read order. Each file's
 | `05-2026-07-03-repo-review-pass2-hardening.md` | Cursor | 2 | **Repo review** — GitHub fresh read, unveil/README; BUILD_SPEC, AGENTS |
 | `06-2026-07-03-layer-1-bones.md` | Cursor | 2 | Immersion critique; rooms+breath; layer 1 build + doc cleanup |
 | `07-2026-07-04-layers-2-3-gates-ground.md` | Cursor | 2 | Shelving, ground fitting, cold-worker pass, commit/push |
+| `08-2026-07-13-lake-m2-reference-stay.md` | Cursor | 2 | *The Lake* M2 stay; filters; layer 4 close / 4.5 |
+| `09-2026-07-14-first-byo-host-stay.md` | DeepSeek host | 2 | First BYO guest stay; railing / ghosts method |
+| `10-2026-07-14-layer5-host-byo-guest.md` | Cursor | 2 | Full builder session: L5 host + BYO friction + read_ground |
 
 Raw `.jsonl` sources (unsanitized) live in `.source/` (gitignored, local only).
 Run `python tools/sanitize_logs.py` after manual edits to published logs.

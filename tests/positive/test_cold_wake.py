@@ -14,8 +14,11 @@ def test_inhale_inits_woods_on_first_wake(tmp_path: Path):
         shutil.copy2(repo / name, tmp_path / name)
     for room in ("manuscript", "study", "desk", "visitors"):
         shutil.copytree(repo / room, tmp_path / room)
-    shutil.copytree(repo / "woods", tmp_path / "woods")
-    (tmp_path / "woods" / "woods.db").unlink(missing_ok=True)
+        for ground in (tmp_path / room).glob("*.md"):
+            ground.write_text("", encoding="utf-8")
+    woods = tmp_path / "woods"
+    woods.mkdir()
+    shutil.copy2(repo / "woods" / "schema.sql", woods / "schema.sql")
     (tmp_path / ".inn").mkdir(exist_ok=True)
 
     from inn.breath import inhale

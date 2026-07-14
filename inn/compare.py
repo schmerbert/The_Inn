@@ -25,14 +25,37 @@ from inn.rooms import list_rooms
 # TRAILHEAD — drift checks use the latest adoption_record per ground_path only.
 # Older records remain in the chain (see list_adoptions_for_ground_path); each
 # snapshots the file at its crossing. Re-shelving appends and adds a new snapshot.
+#
+# Contradiction gauge (layer 4 stay scar): shared vocabulary ≠ conflict.
+# Fast filters — substring extract skip; no within-room scan on manuscript;
+# stopwords; rare-token boost. Reports only; never auto-fixes.
 
 _TOKEN_RE = re.compile(r"[a-z]{4,}")
 _MIN_SHARED_WITHIN_ROOM = 2
 _MIN_SHARED_CROSS_ROOM = 2
+# Function words that survived length≥4 and flooded literary inhale.
+_STOPWORDS = frozenset({
+    "about", "after", "again", "against", "almost", "already", "also", "among",
+    "another", "because", "before", "being", "between", "both", "could", "does",
+    "doing", "during", "each", "either", "enough", "even", "every", "from",
+    "further", "have", "having", "here", "into", "itself", "just", "like",
+    "more", "most", "much", "must", "myself", "never", "only", "other", "over",
+    "same", "should", "since", "some", "still", "such", "than", "that", "their",
+    "them", "then", "there", "these", "they", "this", "those", "through",
+    "under", "until", "very", "want", "wasn", "were", "what", "when", "where",
+    "which", "while", "with", "would", "your", "yourself",
+})
+# Rooms whose ground is long-form prose — within-room echo is not a gauge signal.
+_SKIP_WITHIN_ROOM = frozenset({"manuscript"})
+
+
+def normalize_text(text: str) -> str:
+    """CRLF→LF for stable hashing across Windows editors."""
+    return text.replace("\r\n", "\n").replace("\r", "\n")
 
 
 def file_hash(path: Path) -> str:
-    text = path.read_text(encoding="utf-8")
+    text = normalize_text(path.read_text(encoding="utf-8"))
     return hash_body(text)
 
 
@@ -121,7 +144,24 @@ def _paragraphs(path: Path) -> list[str]:
 
 
 def _significant_tokens(text: str) -> set[str]:
-    return set(_TOKEN_RE.findall(text.lower()))
+    return {
+        tok
+        for tok in _TOKEN_RE.findall(text.lower())
+        if tok not in _STOPWORDS
+    }
+
+
+def _content_overlap(a: set[str], b: set[str]) -> set[str]:
+    """Shared content tokens; prefer signal with at least one rarer (len≥6) term."""
+    shared = a & b
+    if len(shared) < _MIN_SHARED_WITHIN_ROOM:
+        return set()
+    if any(len(tok) >= 6 for tok in shared):
+        return shared
+    # Short content overlap alone (e.g. lake+boat) is too weak for fiction.
+    if len(shared) >= _MIN_SHARED_WITHIN_ROOM + 1:
+        return shared
+    return set()
 
 
 def _paragraph_contradictions(paragraphs: list[str], *, path: str) -> list[dict]:
@@ -130,8 +170,8 @@ def _paragraph_contradictions(paragraphs: list[str], *, path: str) -> list[dict]
     for i, first in enumerate(paragraphs):
         first_tokens = _significant_tokens(first)
         for second in paragraphs[i + 1 :]:
-            shared = first_tokens & _significant_tokens(second)
-            if len(shared) >= _MIN_SHARED_WITHIN_ROOM and first != second:
+            shared = _content_overlap(first_tokens, _significant_tokens(second))
+            if shared and first != second:
                 warnings.append({
                     "label": "warning",
                     "text": "possible contradiction between ground paragraphs",
@@ -141,17 +181,32 @@ def _paragraph_contradictions(paragraphs: list[str], *, path: str) -> list[dict]
     return warnings
 
 
+def _is_extracted_into_study(study_para: str, manuscript_text: str) -> bool:
+    """Shelved study railing that still lives verbatim in manuscript — not conflict."""
+    needle = normalize_text(study_para).strip()
+    hay = normalize_text(manuscript_text)
+    return bool(needle) and needle in hay
+
+
 def _cross_room_contradictions(
     study_paragraphs: list[str],
     manuscript_paragraphs: list[str],
+    *,
+    manuscript_text: str,
 ) -> list[dict]:
     """Study canon vs manuscript ground — overlapping subject, differing text."""
     warnings: list[dict] = []
     for study_para in study_paragraphs:
+        if _is_extracted_into_study(study_para, manuscript_text):
+            continue
         study_tokens = _significant_tokens(study_para)
         for manuscript_para in manuscript_paragraphs:
-            shared = study_tokens & _significant_tokens(manuscript_para)
-            if len(shared) >= _MIN_SHARED_CROSS_ROOM and study_para != manuscript_para:
+            if study_para == manuscript_para:
+                continue
+            if _is_extracted_into_study(study_para, manuscript_para):
+                continue
+            shared = _content_overlap(study_tokens, _significant_tokens(manuscript_para))
+            if shared:
                 warnings.append({
                     "label": "warning",
                     "text": "possible contradiction between study canon and manuscript ground",
@@ -196,20 +251,31 @@ def scan_contradictions(root: Path, conn: sqlite3.Connection) -> list[dict]:
     warnings: list[dict] = []
     study_paragraphs: list[str] = []
     manuscript_paragraphs: list[str] = []
+    manuscript_text = ""
 
     for room in list_rooms(root):
         if not room.ground or not room.ground_file:
             continue
         rel_path = f"{room.id}/{room.ground_file}"
-        paragraphs = _paragraphs(root / rel_path)
-        warnings.extend(_paragraph_contradictions(paragraphs, path=rel_path))
+        path = root / rel_path
+        paragraphs = _paragraphs(path)
+        if room.id not in _SKIP_WITHIN_ROOM:
+            warnings.extend(_paragraph_contradictions(paragraphs, path=rel_path))
         if room.id == "study":
             study_paragraphs = paragraphs
         elif room.id == "manuscript":
             manuscript_paragraphs = paragraphs
+            if path.exists():
+                manuscript_text = path.read_text(encoding="utf-8")
 
     if study_paragraphs and manuscript_paragraphs:
-        warnings.extend(_cross_room_contradictions(study_paragraphs, manuscript_paragraphs))
+        warnings.extend(
+            _cross_room_contradictions(
+                study_paragraphs,
+                manuscript_paragraphs,
+                manuscript_text=manuscript_text,
+            )
+        )
 
     warnings.extend(scan_superseded_in_ground(conn, root))
     return warnings

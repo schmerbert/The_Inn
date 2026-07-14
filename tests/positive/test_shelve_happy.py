@@ -40,4 +40,5 @@ def test_shelve_study_canon_with_adoption_record(inn_root):
     assert record["content_hash"] == content_hash(file_text)
     meta = json.loads(record["meta_json"])
     assert meta["ground_path"] == "study/canon.md"
+    assert "captured_at" in meta
     assert edge["kind"] == "adopts"

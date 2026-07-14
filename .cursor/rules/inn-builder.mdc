@@ -8,9 +8,8 @@ alwaysApply: true
 **Read `BUILD_SPEC.md` first.** This rule is the short form.
 
 ## Phase
-Map complete. **Build in onion layers.** Layer 1 = structural bones only
-(rooms registry, schema, breath stub, red hostile tests, stubs). Not
-inhabitable until late layers.
+Map complete. Layers 1–5 on disk (bones → host). **Layer 6 = skin** only when
+friction asks (faun, visitors, wander). Do not furnish before the frame carries weight.
 
 ## Prime directive
 **AI legibility over human cleverness.** If the next cold agent must hunt
@@ -19,21 +18,22 @@ shattering. Flat modules, policy-shadow headers (Stores/Refuses/Returns/Test),
 one crossing per dangerous act, tests as spec.
 
 ## Read order
-BUILD_SPEC.md → HANDOFF.md → BUILD.md → AGENTS.md.
+BUILD_SPEC.md → HANDOFF.md → BUILD.md → HOST.md (if waking a guest) → AGENTS.md.
 PREBUILD (condensed surfaces) + FOREST.md when BUILD_SPEC points you there.
 **Not** MAP/PYRAMID/logs unless sent there.
 
 ## Do not
 - Hardcode room names in Python — use `rooms.yaml` + `room.yaml`
 - Add philosophy docs during build
-- Build faun, mycelium, visitors, wander, embeddings before layer 5–6
+- Build faun, mycelium, visitors, wander, embeddings before layer 6 is earned
 - Green tests without real crossings (no theater)
 - Abstract "for later"
+- Soft-canon / “implied promotions” as authority — attention only, later
 
 ## Escalate to Fable
 Scope disputes, register drift, test 4/6 kindness, post-compaction cold read.
 Not for mkdir or schema.
 
 ## Before commit
-Cold instance test: HANDOFF + BUILD + BUILD_SPEC layer 1 checklist +
+Cold instance test: HANDOFF Cold worker map + BUILD + HOST (if touched) +
 tests/hostile + ENTRY → enough to work?

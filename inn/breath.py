@@ -1,21 +1,32 @@
-# breath — inhale packet assembly; M0.5 ground fitting (layer 3).
+# breath — inhale packet assembly; M0.5 ground fitting; exhale seat check (layer 5).
 #
 # Stores: session touch_inhale + logs/breath inhale receipts
-# Refuses: exhale (layer 5+)
-# Returns: inhale packet dict — see INHALE_PACKET below; inhale_json() → JSON str
+# Refuses: stale HANDOFF on exhale (woods newer than guest book)
+# Returns: inhale packet dict — see INHALE_PACKET below; exhale {clear, held}
 # Test: tests/hostile/test_compare_drawer_mismatch.py, test_contradiction.py
-#       tests/positive/test_ground_fitting.py, test_cold_wake.py
+#       tests/positive/test_ground_fitting.py, test_cold_wake.py, test_exhale_seat.py
+#
+# INHALE_PACKET — inhale() / fit_packet() return shape (M0.5, layer 3).
+# Slots cite ids and paths only. Never re-authored prose.
+#
+#   warnings  list[{label, text, path?, ...}]  compare.scan_ground_warnings
+#   ground    list[{room_id, path, adoption_record_ids?, adoption_record_id?, exists?}]
+#   pressure  list[{id, label}]                 open question entry ids
+#   seam      {files_in_flight, last_pair_root_id?}
+#   tools     host catalog                      shelve only for ground — not forest.adopt
+#
+# Room ↔ woods buckets: ROOM_READ_BUCKETS below (do not duplicate elsewhere).
 
 from __future__ import annotations
 
 import json
 import sqlite3
 import time
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from inn import forest
-from inn import breath_ledger
+from inn import breath_ledger, forest
 from inn.compare import (
     list_adoptions_for_ground_path,
     scan_ground_warnings,
@@ -25,16 +36,6 @@ from inn.paths import repo_root
 from inn.rooms import list_rooms, load_room
 from inn.session import load as load_session, touch_inhale
 
-# INHALE_PACKET — inhale() / fit_packet() return shape (M0.5, layer 3).
-# Slots cite ids and paths only. Never re-authored prose.
-#
-#   warnings  list[{label, text, path?, ...}]  compare.scan_ground_warnings
-#   ground    list[{room_id, path, adoption_record_ids?, adoption_record_id?, exists?}]
-#   pressure  list[{id, label}]                 open question entry ids
-#   seam      {files_in_flight, last_pair_root_id?}
-#   tools     {wake, shelve}                    shelve only — not forest.adopt
-#
-# Room ↔ woods buckets: ROOM_READ_BUCKETS below (do not duplicate elsewhere).
 ROOM_READ_BUCKETS: dict[str, tuple[str, ...]] = {
     "manuscript": ("session_pair", "question", "adoption_record"),
     "study": ("adoption_record", "superseded_canon", "question"),
@@ -223,8 +224,61 @@ def inhale(root: Path | None = None) -> dict[str, Any]:
     return packet
 
 
+def _parse_woods_ts(value: str) -> datetime | None:
+    text = (value or "").strip()
+    if not text:
+        return None
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt
+
+
 def exhale(root: Path | None = None) -> dict[str, Any]:
-    raise BreathRefusal("exhale not implemented until layer 5 (M2 manual first)")
+    """M5 seat check — clear only if HANDOFF is at least as fresh as newest woods activity.
+
+    Writer/guest still rewrites HANDOFF after a clear seat. Raises BreathRefusal when held.
+    """
+    root = root or repo_root()
+    forest.init_db(root)
+    held: list[str] = []
+
+    handoff = root / "HANDOFF.md"
+    if not handoff.exists():
+        held.append("HANDOFF.md missing — rewrite the guest book before leaving")
+    else:
+        handoff_mtime = datetime.fromtimestamp(handoff.stat().st_mtime, tz=timezone.utc)
+        newest: datetime | None = None
+        with forest.connect(root) as conn:
+            row = conn.execute(
+                "SELECT created_at FROM entries ORDER BY id DESC LIMIT 1"
+            ).fetchone()
+        if row is not None:
+            newest = _parse_woods_ts(str(row["created_at"]))
+        if newest is not None and handoff_mtime < newest:
+            held.append(
+                "HANDOFF older than newest woods activity — rewrite guest book "
+                f"(HANDOFF mtime {handoff_mtime.isoformat()}; woods {newest.isoformat()})"
+            )
+
+    session = load_session(root)
+    if not session.last_inhale_at:
+        held.append("no inhale this stay — wake before exhale")
+
+    if held:
+        raise BreathRefusal("; ".join(held))
+
+    return {
+        "breath": "out",
+        "clear": True,
+        "held": [],
+        "note": "seat clear — rewrite HANDOFF texture citing ids/paths, then update session seam",
+    }
 
 
 def inhale_json(root: Path | None = None) -> str:

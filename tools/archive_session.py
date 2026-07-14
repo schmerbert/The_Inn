@@ -272,7 +272,12 @@ def main() -> int:
 
     out.write_text("\n".join(lines), encoding="utf-8")
     sanitize_file(out)
-    print(f"{fmt}: {len(turns)} turns -> {out.relative_to(ROOT)}")
+    out_resolved = out.resolve()
+    try:
+        shown = out_resolved.relative_to(ROOT)
+    except ValueError:
+        shown = out_resolved
+    print(f"{fmt}: {len(turns)} turns -> {shown}")
     print(f"source archived -> {SOURCE / src.name}")
     return 0
 

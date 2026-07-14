@@ -1,6 +1,6 @@
 # shelve — the Shelving crossing to author ground (one door).
 #
-# Stores: room ground files; adoption_record + meta ground_path + cites chain
+# Stores: room ground files; adoption_record + meta ground_path + captured_at + cites chain
 # Refuses: praise, paraphrase, unsigned, wrong room, desk→ground, missing ground_file
 #          manuscript without source_verbatim (see TRAILHEAD below)
 # Returns: int — adoption_record entry id in woods.db
@@ -8,15 +8,17 @@
 #       tests/positive/test_shelve_happy.py
 #
 # TRAILHEAD — source_verbatim: required for manuscript; optional for study.
+# TRAILHEAD — captured_at: stamped at crossing; writer does not type dates.
 
 from __future__ import annotations
 
 import re
 import sqlite3
+from datetime import datetime, timezone
 from pathlib import Path
 
 from inn import forest
-from inn.compare import latest_adoption_for_ground_path
+from inn.compare import latest_adoption_for_ground_path, normalize_text
 from inn.errors import ShelvingRefusal
 from inn.forest import hash_body
 from inn.paths import repo_root
@@ -55,13 +57,13 @@ def _ground_path(room: RoomPolicy) -> Path:
 
 def _append_ground_file(path: Path, content: str) -> str:
     """Write content to ground file; append when drawer already has text. Returns full file text."""
-    text = content.strip()
+    text = normalize_text(content).strip()
     if not text:
         raise ShelvingRefusal("empty content")
 
     path.parent.mkdir(parents=True, exist_ok=True)
     if path.exists():
-        existing = path.read_text(encoding="utf-8").strip()
+        existing = normalize_text(path.read_text(encoding="utf-8")).strip()
         if existing:
             full = f"{existing}\n\n{text}"
         else:
@@ -69,13 +71,13 @@ def _append_ground_file(path: Path, content: str) -> str:
     else:
         full = text
 
-    path.write_text(full, encoding="utf-8")
+    path.write_bytes(full.encode("utf-8"))
     return full
 
 
 def content_hash(text: str) -> str:
-    """SHA256 of room file bytes at Shelving — compare.py uses this for test 5."""
-    return hash_body(text)
+    """SHA256 of room file text at Shelving — CRLF-normalized; compare.py matches."""
+    return hash_body(normalize_text(text))
 
 
 def shelve(
@@ -129,6 +131,8 @@ def shelve(
     ground_path = _ground_path(room)
     file_text = _append_ground_file(ground_path, content)
     ceremony = adopting_words.strip()
+    # Writer does not type dates — stamp lives on the record (meta + created_at).
+    captured_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     def _cross(db: sqlite3.Connection) -> int:
         origin_id = pair_root_id
@@ -148,7 +152,7 @@ def shelve(
             authority="record",
             body=ceremony,
             content_hash=content_hash(file_text),
-            meta={"ground_path": rel_path},
+            meta={"ground_path": rel_path, "captured_at": captured_at},
             origin_to_id=origin_id,
             origin_kind="adopts",
         )

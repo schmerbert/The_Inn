@@ -2,6 +2,7 @@
 .claude/
 __pycache__/
 *.pyc
+.env
 
 # Local marble instance
 woods/woods.db
@@ -9,6 +10,11 @@ woods/woods.db
 
 # Unsanitized log originals (see tools/sanitize_logs.py) — local only
 logs/.source/
+
+# Wake / host receipts (ids only; regenerate on use) — keep README.md
+logs/breath/*.json
+logs/host/*.json
+logs/host/*-stay.md
 
 # Raw transcript archives, if ever re-copied (lighthouse law: sanitized only)
 conversation.source.jsonl

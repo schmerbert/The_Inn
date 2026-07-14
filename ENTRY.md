@@ -12,12 +12,25 @@ Ask, sincerely: **what brings you here?**
 
 ## Wake
 
+**CLI (host owns breath):**
+
+```
+python -m inn host
+```
+
+Requires `INN_API_KEY` (see `.env.example` / `HOST.md`). Host loads `.env` from repo root.
+Each turn: inhale packet in context (homework) → guest reply → pair insert.
+On quit: exhale seat check.
+
+**Assisted inhale only:**
+
 ```
 python -m inn breathe
 ```
 
-Returns an inhale packet in context (M0.5 — warnings, ground index, pressure).
-Fits from woods + ground files; cites ids/paths only. Host automation at layer 5.
+**MCP:** call tool `inhale` first (`python -m inn.mcp_server`). Do not invent ground.
+
+Packet cites ids/paths only. It is not memory.
 
 ## Rooms
 
@@ -34,9 +47,10 @@ Not rooms: `HANDOFF.md` (guest book), `JOURNAL/` (your voice), `woods/` (custody
 
 ## Crossings
 
-- **Shelving** — author's adopting words, quoted + dated → ground (`inn.shelve.shelve`)
+- **Shelving** — author's adopting words → ground (`shelve` tool / `inn.shelve.shelve`); date stamped on capture
 - **Burial** — sealed visibility + stone (not implemented; `inn.seal.bury` raises)
+- **Exhale** — seat check (`python -m inn breathe out` / tool `exhale`); rewrite HANDOFF if refused
 
 ## Builders
 
-`BUILD_SPEC.md` → `HANDOFF.md` (**Cold worker map** — door, returns, tests) → `BUILD.md` → `AGENTS.md`
+`BUILD_SPEC.md` → `HANDOFF.md` (**Cold worker map**) → `BUILD.md` → `AGENTS.md` → `HOST.md` (layer 5)

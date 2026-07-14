@@ -95,7 +95,7 @@ def insert(
     if bucket == "adoption_record" and not content_hash:
         raise ForestRefusal("adoption_record requires content_hash (room file at Shelving)")
 
-    ts = created_at or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%fZ")
+    ts = created_at or datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
     cur = conn.execute(
         """
         INSERT INTO entries (

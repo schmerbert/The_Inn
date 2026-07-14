@@ -1,52 +1,41 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-08 (layer 4 slices landed; manual reference stay next)
-Updated by: Cursor builder instance — layer 4 breath fitting
-Last real use: none — no writer session yet
-Current phase: **layer 4 in progress** (pair insert, receipts, proximity pressure fitting).
-Next step: run one manual M2 reference stay and log friction before layer 5 host wiring.
-Lineage: `JOURNAL/005-the-innkeeper-labels-the-doors.md`, `JOURNAL/006-the-pressure-seam-is-real.md`; session `logs/07-2026-07-04-layers-2-3-gates-ground.md`.
-
-## After layer 4 — first real stay (owner decision)
-
-**When layer 4 closes**, the owner will run **live testing and friction fixing**
-— not more pytest theater. A real reference session (short story on the desk /
-manuscript, manual M1–M2 breath, shelve ceremony, tamper-and-warn, session
-archived to `logs/`). Clinical fixtures stay in `tests/`; writer prose stays
-local unless explicitly shared.
-
-**Inhabitable when?**
-
-| Layer | Posture | API key? |
-|-------|---------|----------|
-| **4 — Breath** | **Poorly** — manual traverse, `BREATH.md`, M2 reference session | **No** — CLI `python -m inn breathe`, shelve by hand/script, pair insert trailhead live |
-| **5 — Host** | **Daily driver** — wake coupling, hooks, session capture in the loop | **Yes** — host calls model (Claude Code / API per BUILD_SPEC); inhale as tool return |
-
-Layer 4 earns *trust the manual path*. Layer 5 earns *live in the loop*.
-Do not skip the post–layer-4 stay for API wiring — friction found there
-(feedback register, seam, shelve awkwardness) should land in HANDOFF before
-host automation.
-
-**Test data rule:** hostile/positive tests keep minimal clinical strings;
-the reference session uses the owner's short story excerpt — separate tracks.
+Last updated: 2026-07-13 (layer 5 solidified — friction register + host ergonomics)
+Updated by: Cursor builder — final pass after dual host
+Last real use: **2026-07-13** — *The Lake* M2 stay (manual); host ready for BYO guest
+Current phase: **layer 5 — Host complete** — next is live API stay, then layer 6 only if friction asks
+Next step: `python -m inn host` with key; log guest friction; park warm-candidates / burial
+Lineage: `HOST.md`; `logs/08-2026-07-13-lake-m2-reference-stay.md`
 
 ## Live state (read this first)
 
-**Layer 4 slices are on disk.** Breath now fits ground with pressure proximity:
+**Layer 5 host core is on disk.**
 
-- `inn/breath.py` — `inhale()` fills `warnings` (compare), `ground` (paths + adoption ids), `pressure` (questions)
-- `inn/compare.py` — `scan_ground_warnings`, `scan_contradictions`, adoption chain queries
-- Contradiction gauge live (within-room, study↔manuscript, superseded-in-file)
-- `source_verbatim` required for manuscript, optional for study (trailheads in code + BUILD_SPEC)
-- `forest.adopt()` woods-only — not in inhale `tools`
-- `forest.insert_pair()` trailhead + `tests/positive/test_pair_insert.py`
-- `inn/breath_ledger.py` receipts + inhale stage timings in `inhale()`
-- pressure fitting traverses from `session.last_pair_root_id` (`forest.related_descendants`)
-- deterministic + proximity tests live:
-  - `tests/positive/test_inhale_deterministic.py`
-  - `tests/positive/test_pressure_proximity.py`
-- `python -m pytest tests/hostile tests/positive -q` → **21 passed**
-- `python -m inn breathe` — cold wake works (`init_db` idempotent in inhale)
+- `HOST.md` — wake contract, env vars, guest-friction rules
+- `inn/host.py` — `wake`, `ingest_turn`, `guest_system_prompt`, turn envelopes
+- `inn/cli_host.py` — OpenAI-compatible REPL (`python -m inn host`)
+- `inn/mcp_server.py` — MCP stdio tools: inhale, shelve, set_room, record_pair, refuse_invention, exhale
+- `breath.exhale()` — seat check (stale HANDOFF / no inhale → `BreathRefusal`)
+- Forest `created_at` now proper ISO (seat compare was broken on `%f` stamp)
+- `python -m pytest tests/hostile tests/positive -q` → **37 passed** (no live API in CI)
+
+**Parked (do not build as soft-canon):** warm implied-promotions bucket; burial/test 6; steward eval (test 4).
+
+## Known friction register (Lake + host)
+
+| Scar | Fix / posture |
+|------|----------------|
+| Inhale flooded by “contradictions” on fiction | `compare.py` fast filters; drift still primary |
+| Silent edit / CRLF false drift | normalize at shelve + `file_hash` |
+| Dates in adopting words | `meta.captured_at` auto |
+| Guest arrives blind | CLI forces wake; MCP must call `inhale` |
+| Guest treats packet as memory | `guest_system_prompt` — homework law |
+| Lost pair custody | CLI `ingest_turn` every turn; MCP `record_pair` |
+| Quit without seat check | CLI runs `exhale` on quit |
+| Guest cannot read lake prose | `read_ground` lookup tool (BYO stay scar) |
+| Guest said "shelved" without tool ok | prompt forbids; only claim after `shelve` → ok |
+| Torch-handback closers | prompt: fewer; writer drives |
+| Live API not in CI | mock `chat_completion`; owner runs `python -m inn host` |
 
 ## Cold worker map (where things live)
 
@@ -55,67 +44,38 @@ the reference session uses the owner's short story excerpt — separate tracks.
 | Job | Module | Call | Returns |
 |-----|--------|------|---------|
 | Room policy | `inn/rooms.py` | `load_room(id)`, `list_rooms()` | `RoomPolicy` (incl. `ground_file`) |
-| **Shelving → ground** | `inn/shelve.py` | `shelve(room_id, content, adopting_words, …)` | `int` — `adoption_record` entry id |
-| Woods insert | `inn/forest.py` | `insert()`, `insert_pair_root()`, `insert_pair()` | `int` — entry id / pair ids |
-| Open questions | `inn/forest.py` | `refuse_ground_invention()`, `related_descendants()` | `int` / `list[int]` |
-| ~~Ground files~~ | `inn/forest.py` | `adopt()` | **Not the marble door** — woods ceremony only |
-| Wake / inhale | `inn/breath.py` | `inhale()` | `dict` — see `INHALE_PACKET` in `breath.py` |
-| Drawer + contradiction warnings | `inn/compare.py` | `scan_ground_warnings()` | `list[dict]` — for `packet["warnings"]` |
-| One drawer check | `inn/compare.py` | `check_drawer(path, conn, id)` | `list[dict]` |
-| Adoption chain | `inn/compare.py` | `list_adoptions_for_ground_path()` | `list[int]` ids, oldest first |
-| Session | `inn/session.py` | `load()`, `save()` | `SessionState` |
-| Burial | `inn/seal.py` | `bury()` | raises `SealRefusal` (not built) |
-| CLI wake | `python -m inn breathe` | `inn/__main__.py` | JSON inhale packet on stdout |
-| Breath ledger *(layer 4)* | `inn/breath_ledger.py` | `write_receipt(packet, timings)` | path under `logs/breath/` |
-| Inhale timings *(layer 4)* | `inn/breath.py` | `inhale()` | packet + timings in receipt |
+| **Shelving → ground** | `inn/shelve.py` | `shelve(...)` | adoption id; `meta.captured_at` |
+| Woods insert | `inn/forest.py` | `insert()`, `insert_pair()` | entry / pair ids |
+| Open questions | `inn/forest.py` | `refuse_ground_invention()` | question id |
+| Wake / inhale | `inn/breath.py` / `inn/host.wake` | `inhale()` / `wake()` | packet dict |
+| Exhale seat | `inn/breath.py` | `exhale()` | `{clear, held}` or `BreathRefusal` |
+| Host ingest | `inn/host.py` | `ingest_turn(guest, reply)` | `pair_root_id` |
+| CLI guest | `python -m inn host` | `inn/cli_host.py` | REPL |
+| MCP | `python -m inn.mcp_server` | tools above | JSON content |
+| Compare | `inn/compare.py` | `scan_ground_warnings()` | drift + filtered contradictions |
 
-**Crossings (authority changes):** only `shelve.py` writes ground markdown.
-**Custody (woods):** only `forest.py` inserts entries.
-**Fitting (packet):** only `breath.py` assembles inhale slots.
+**Crossings:** only `shelve.py` writes ground markdown.
+**Custody:** only `forest.py` inserts entries (host calls `insert_pair`).
+**Fitting:** only `breath.py` / `host.wake` assemble inhale.
 
-**Tests = law:** `tests/hostile/` first; `tests/positive/` shows happy paths.
 Run: `python -m pytest tests/hostile tests/positive -q`
 
-**Layer 4 next:** run manual M2 reference session with short story excerpt; capture
-friction in `logs/` + HANDOFF, then scope layer 5 host contract from trace.
 
-**Layer 2 Shelving** (still true):
+## After layer 4 — first real stay (done)
 
-- `inn/shelve.py` — writes `permissions.ground_file` + `adoption_record`
-- Hostile tests **1–3 green**; `tests/positive/test_shelve_happy.py`
+M2 reference stay ran 2026-07-13 with *The Lake*. Friction landed below and in
+`BREATH.md`. Clinical fixtures remain in `tests/`; story prose is on
+`manuscript/ground.md` + `study/canon.md` by owner consent.
 
-**Layer 1 bones** (still true):
+**Inhabitable when?**
 
-- `rooms.yaml` + seed `room.yaml`; `woods/schema.sql`; `ENTRY.md`
+| Layer | Posture | API key? |
+|-------|---------|----------|
+| **4 — Breath** | **Trust manual path** — M2 stayed; wake usable after filter fix | **No** |
+| **4.5 — Responsiveness** | Intentional latency classes + budget docs | **No** |
+| **5 — Host** | **Daily driver** — wake coupling, hooks | **Yes** (Claude Code / DeepSeek trial ok) |
 
-**Schema note:** A 2026-07-03 session hardened `woods/schema.sql` (body_hash,
-DB-enforced append-only, etc.) after work on a standalone Forest package. Good
-ideas adopted here; **no upstream sync obligation**. FOREST.md is lineage;
-`woods/schema.sql` in this repo is the law for The Dog-Ear. See JOURNAL/004
-correction postscript.
-
-**Two subsystems** (unchanged from pass 2 — now partially enacted):
-
-1. **Rooms** — open registry (`rooms.yaml` + per-room `room.yaml`). A room is
-   policy + path, not a hardcoded enum. `manuscript`, `study`, `desk`,
-   `visitors` are seed data for The Dog-Ear. Add a room later: new dir +
-   manifest + registry line. Code: `inn/rooms.py`; crossings validate against
-   policy. ENTRY, HANDOFF, JOURNAL, woods are **not** rooms.
-
-2. **Breath** — packet assembly + delivery (`inn/breath.py`). Inhale =
-   arrival orientation; exhale = departure seat check. Packets arrive **in
-   context** (tool return on wake — Trinity pattern), not smuggled as false
-   memory. **Growth:** manual breath (M1–M2) is the reference impl;
-   automation must pass parity — see BUILD_SPEC § Breath growth. Trinity
-   malformation (*keep everything, change everything*) is named and refused.
-   Session state: `.inn/session.yaml`. Room↔bucket join + dual hash seam
-   (`body_hash` + `content_hash`) — BUILD_SPEC § Seams closed / § Two hashes.
-
-**Builder read order:** BUILD_SPEC.md → this file → BUILD.md → AGENTS.md.
-Pass 1 (PREBUILD, SHOWCASE, MAP, …) only when BUILD_SPEC points you there.
-
-**Ancestry below** is pass 1 sediment — valid lineage; BUILD_SPEC supersedes
-for *what to build next*.
+**Test data rule:** hostile/positive = clinical strings; Lake stay = writer track.
 
 ## Pass 2 additions (2026-07-03) — builder hardening
 
@@ -330,29 +290,23 @@ paraphrases). One law with many faces: nobody puts words in anyone's mouth.
 - NOTEBOOK.md → JOURNAL.md. Ten policy shadows written (PREBUILD "Condensed
   surfaces"): stores/refuses/returns/warns/test for every surface.
 
-## Next worker — layer 4 only
+## Next worker — live BYO guest, then layer 6 carefully
 
-Layer 3 checklist is **done**. Execute layer 4:
+Layer 5 checklist is **done**. Next:
 
-1. Conversation pair insert in real time (pairs cannot retrofit)
-2. Manual traverse by hand — reference impl before automation
-3. Write `BREATH.md` — manual inhale/exhale procedure
-4. Rewrite this handoff at layer end
-
-Layer 3 recap: `inhale()` → `fit_packet()`; warnings via `compare.scan_ground_warnings`;
-ground slot lists `adoption_record_ids` chain; drift uses latest id only.
-
-First use (layer 4+): not yet.
+1. Run `python -m inn host` with `INN_API_KEY` (DeepSeek or any OpenAI-compatible)
+2. Or wire MCP from `HOST.md` into Cursor / Claude Code
+3. Log guest friction in HANDOFF / `logs/`
+4. Do **not** build faun/mycelium soft-canon — layer 6 only after friction asks
 
 ## What must not be trusted yet
-- Everything is pre-friction. The pull-pair section, the injection grammar, the
-  visitor kinds — all of it must earn its keep in first use; cut what doesn't.
+- Soft contradiction gauge for subtle continuity (bought vs dock) — still weak
+- Warm implied-promotions bucket — designed, not built
+- Burial / test 6 — stub
+- Live host unproven under multi-hour stays — first API stay is the proof
+- The pull-pair section, injection grammar, visitor kinds — earn keep in fuller use
 - Do NOT build faun/innkeeper machinery, discovery radius, landmarks, mycelium
-  synthesis, or visitor subagents yet. Schema-yes, machinery-later. Trinity was
-  fragile because eleven systems arrived before friction (BOOK.pdf, read in full
-  by the mapping instance).
-- Manual-pack test-green claims are user-reported CI (Linux); zips won't run
-  locally — do not conclude breakage.
+  synthesis, or visitor subagents yet. Schema-yes, machinery-later.
 - **START_HERE** — blinders-era door; moved to `logs/attic/START_HERE-blinders.md`.
   Do not follow it.
 

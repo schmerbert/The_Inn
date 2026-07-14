@@ -45,9 +45,9 @@ Humans may read the code. **Agents must be able to work from it.**
 | Done | Not done |
 |------|----------|
 | PREBUILD, FOREST, REGISTERS, SHOWCASE, MAP, PYRAMID | First real use |
-| Layers 1–3: registry, schema, shelve, ground fitting | Layers 4–6: breath automation, host, skin |
-| Hostile tests 1–3, 5 + positive suite (17 green) | Hostile 4, 6 (manual/eval) |
-| Design ancestry in `logs/` | Inhabitable daily driver |
+| Layers 1–5: registry → host (CLI + MCP) | Layer 6: faun, visitors, wander, embeddings |
+| Hostile tests 1–3, 5 + positive suite (37 green) | Hostile 4, 6 (manual/eval) |
+| Design ancestry in `logs/` | Fuller inhabitable skin |
 | Exemplars in `TheMarble(manual_examples)/` | faun, visitors, wander, embeddings |
 
 **Build posture: onion layers.** Each layer is a small, honest commit.
@@ -88,7 +88,7 @@ hostile floor; trench's one-gate refusal pattern.
 | **2 — Gates** | Shelving crossing; tests 1–3 green | Barely |
 | **3 — Ground** | seed rooms wired; test 5 + ground fitting | Starting |
 | **4 — Breath** | pair insert, traverse by hand, BREATH.md | Poorly |
-| **5 — Host** | Claude Code tools/hooks, session capture | Daily driver |
+| **5 — Host** | Claude Code / any-API CLI + MCP, session capture | Daily driver |
 | **6 — Skin** | faun, visitors, wander, injection machinery | SHOWCASE-true |
 
 **Layer 1 is structural only.** Empty rooms are fine. Missing rooms are not.
@@ -148,7 +148,10 @@ TheInn/
     errors.py            ← refusal exception families
     rooms.py             ← load registry, resolve policy
     session.py           ← .inn/session.yaml → SessionState
-    breath.py            ← inhale/exhale; INHALE_PACKET shape documented
+    breath.py            ← inhale; exhale seat (L5); INHALE_PACKET
+    host.py              ← wake, ingest_turn, guest prompt
+    cli_host.py          ← python -m inn host (any API)
+    mcp_server.py        ← python -m inn.mcp_server
     forest.py            ← woods insert/refuse; adopt() woods-only
     shelve.py            ← **only** crossing to author ground files
     compare.py           ← drawer drift, contradictions, adoption chain
@@ -199,22 +202,18 @@ not only pytest asserts. Say so in BUILD.md; do not fake them green.
 
 ---
 
-## Arriving cold (layers 1–3 done — layer 4 next)
+## Arriving cold (layers 1–5 done — live host / layer 6 next)
 
-When the human says go on layer 4:
+When the human says go:
 
-1. Read HANDOFF **Cold worker map** — then BUILD_SPEC layer 4 scope
-2. Read `INHALE_PACKET` in `inn/breath.py` before touching packet slots
-3. Run `python -m pytest tests/hostile tests/positive -q` — must stay green
-4. **Do not** write ground files except through `shelve()`; **do not** use `forest.adopt()` for drawers
-5. Implement layer 4 only: pair insert, manual traverse, `BREATH.md`
-6. Rewrite HANDOFF at layer end — update Cold worker map for anything new
+1. Read HANDOFF **Cold worker map** + **HOST.md** if waking a guest
+2. Run `python -m pytest tests/hostile tests/positive -q` — must stay green
+3. **Do not** write ground except through `shelve()`; **do not** use `forest.adopt()` for drawers
+4. Layer 6 only when friction asks — faun/visitors/wander/embeddings/warm-candidates
+5. Rewrite HANDOFF at layer end
 
-Layers 1–3 checklist (complete — see git history / BUILD.md):
-
-1. `rooms.yaml` + seed `room.yaml`; `woods/schema.sql`; hostile floor
-2. `shelve.py` crossing; tests 1–3 green
-3. `breath.inhale` ground fitting; test 5 + contradictions green
+Already done (do not rebuild): rooms, shelve, inhale, Lake M2 stay, contradiction
+filters, dual host (`python -m inn host` / `python -m inn.mcp_server`).
 
 ---
 
