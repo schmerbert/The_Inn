@@ -96,5 +96,8 @@ Receipts already record stage ms. Layer 5 hosts enforce; layer 4.5 documents.
   same JSON homework shape — see `HOST.md`
 - **M5:** CLI quit + `python -m inn breathe out` / tool `exhale` — seat check;
   writer rewrites HANDOFF if held
-- Host turn envelopes → `logs/host/` (gitignored JSON)
-- Warm candidates / mycelium pressure → layer 6 (attention, not authority)
+- **M6 (partial):** inhale may include `pulse` (faun gesture) — consumed on fit;
+  dies after one wake. Plant via host quit or `python -m inn pulse`.
+  Hearthstone path in packet when `assets/hearth/hearth.jpg` present.
+- Host turn envelopes → `logs/host/` (gitignored JSON); stay transcripts `*-stay.md`
+- Warm candidates / mycelium / visitors / wander → still deferred

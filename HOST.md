@@ -26,7 +26,9 @@ python -m inn host
 (`cli_host` loads `.env` automatically; existing env vars win.)
 
 4. Talk about the manuscript; try Shelving only with your adopting words.
-5. `quit` — host runs exhale seat check; if held, rewrite `HANDOFF.md` and retry `python -m inn breathe out`.
+5. Optional: `read_ground` on `manuscript/ground.md` / `study/canon.md`.
+6. Optional: plant pulse before stay (`python -m inn pulse`) — ask about `pulse` on **first** turn only.
+7. `quit` — exhale seat check + dusk pulse plant; if exhale held, rewrite `HANDOFF.md` then `python -m inn breathe out`.
 
 ## Env (never commit secrets)
 
@@ -57,6 +59,10 @@ python -m inn host
 4. Desk = model draft until Shelving.
 5. Pair custody is host/tool duty — guest need not remember pair ids.
 6. Warnings are filtered heuristics — drift is trustworthy; soft continuity is not.
+7. Hearthstone (`assets/hearth/hearth.jpg`) — wake orientation; CLI attaches pixels on first turn (vision models; text-only falls back); MCP `inhale` returns image block when present.
+8. No delete — offer Burial (`bury`); sealed entries leave FTS/read_ground after redact.
+9. Drift — `rebind_ground` with author's words (no append); bury redact auto-rebinds.
+10. Faun `pulse` — gesture not ground; dies after one wake; later turns correctly `null`.
 
 ## Known friction (honest)
 
@@ -68,6 +74,10 @@ python -m inn host
 | MCP guest can skip `inhale` | Documented — IDE skins rely on guest discipline |
 | Huge inhale JSON in context every CLI turn | Acceptable at L5; compress later if TTFT suffers |
 | Exhale refuses until HANDOFF rewritten | Intentional (M5) |
+| Text-only model + hearth image | CLI retries without pixels if API rejects multimodal |
+| Hostile test 6 kindness | Manual/eval — `tests/hostile/README_test6.md` |
+| Pulse only on first turn | By design (decay); plant via quit or `python -m inn pulse` |
+| Study model residue | Writer may bury; trailhead already rebound |
 
 ## Tools exposed
 
@@ -76,6 +86,8 @@ python -m inn host
 | (auto wake) | every turn | call `inhale` | no |
 | `read_ground` | tool | tool | **no** (lookup — opens manuscript/study ground text) |
 | `shelve` | tool | tool | **yes** |
+| `rebind_ground` | tool | tool | **yes** (trailhead only — no append) |
+| `bury` | tool | tool | **yes** (Burial — seals; may redact ground) |
 | `set_room` | tool | tool | no |
 | `refuse_invention` | tool | tool | no |
 | `record_pair` | auto after reply | tool | no |

@@ -1,27 +1,32 @@
 # HANDOFF.md — the guest book
 
-Last updated: 2026-07-13 (layer 5 solidified — friction register + host ergonomics)
-Updated by: Cursor builder — final pass after dual host
-Last real use: **2026-07-13** — *The Lake* M2 stay (manual); host ready for BYO guest
-Current phase: **layer 5 — Host complete** — next is live API stay, then layer 6 only if friction asks
-Next step: `python -m inn host` with key; log guest friction; park warm-candidates / burial
-Lineage: `HOST.md`; `logs/08-2026-07-13-lake-m2-reference-stay.md`
+Last updated: 2026-07-16 (docs solidified — hearth, bury, rebind, faun pulse felt)
+Updated by: Cursor builder — night solidify
+Last real use: **2026-07-16** — burial stay + pulse wake (guest named decay: gesture, not ground)
+Current phase: **layer 6 partial** — hearth / bury / rebind / faun pulses live; visitors/wander/embeddings pending
+Next step: optional bury of model residue in study; visitors/wander only if friction asks
+Lineage: `HOST.md`; `logs/11-2026-07-16-layer6-hearth-bury-pulse.md`; `inn/pulse.py`
 
 ## Live state (read this first)
 
-**Layer 5 host core is on disk.**
+**Daily-driver host + immersion slice on disk. 52 pytest green.**
 
-- `HOST.md` — wake contract, env vars, guest-friction rules
-- `inn/host.py` — `wake`, `ingest_turn`, `guest_system_prompt`, turn envelopes
-- `inn/cli_host.py` — OpenAI-compatible REPL (`python -m inn host`)
-- `inn/mcp_server.py` — MCP stdio tools: inhale, shelve, set_room, record_pair, refuse_invention, exhale
-- `breath.exhale()` — seat check (stale HANDOFF / no inhale → `BreathRefusal`)
-- Forest `created_at` now proper ISO (seat compare was broken on `%f` stamp)
-- `python -m pytest tests/hostile tests/positive -q` → **37 passed** (no live API in CI)
+| Organ | Status |
+|-------|--------|
+| Dual host (CLI + MCP) | done — `python -m inn host` / `python -m inn.mcp_server` |
+| `read_ground` | done — BYO scar; second stay: intuitive |
+| Hearthstone | done — `assets/hearth/hearth.jpg`; posture on wake |
+| Burial `bury` | done — kind delete-offer; seal + redact; mechanical tests |
+| `rebind_ground` | done — drift trailhead; auto after bury redact; study rebound |
+| Faun pulse | done — `FAUN_PULSE` once per wake then silent; plant on quit / `python -m inn pulse` |
+| Hostile 4 / 6 kindness | still manual/eval |
+| Visitors, wander, embeddings, Haiku faun | **not built** |
 
-**Parked (do not build as soft-canon):** warm implied-promotions bucket; burial/test 6; steward eval (test 4).
+**Study note:** `study/canon.md` still mixes lake railing with early **model residue** (guest commentary). Trailhead rebound; bury residue when writer wants.
 
-## Known friction register (Lake + host)
+**Parked (not soft-canon):** warm implied-promotions; mycelium engine; unseal ceremony.
+
+## Known friction register (Lake + host + L6)
 
 | Scar | Fix / posture |
 |------|----------------|
@@ -32,10 +37,17 @@ Lineage: `HOST.md`; `logs/08-2026-07-13-lake-m2-reference-stay.md`
 | Guest treats packet as memory | `guest_system_prompt` — homework law |
 | Lost pair custody | CLI `ingest_turn` every turn; MCP `record_pair` |
 | Quit without seat check | CLI runs `exhale` on quit |
-| Guest cannot read lake prose | `read_ground` lookup tool (BYO stay scar) |
-| Guest said "shelved" without tool ok | prompt forbids; only claim after `shelve` → ok |
-| Torch-handback closers | prompt: fewer; writer drives |
-| Live API not in CI | mock `chat_completion`; owner runs `python -m inn host` |
+| Guest cannot read lake prose | `read_ground` |
+| False “shelved” / “buried” claims | prompt: only after tool `ok` |
+| Torch-handback closers | prompt: fewer; stronger models help |
+| Live API not in CI | mock `chat_completion` |
+| Delete demand | `bury` + kind offer |
+| Study hash drift | `rebind_ground` (+ auto after bury redact) |
+| Faun authority-by-cadence | pulse = gesture; **ask on first wake** (later turns `null` by design) |
+| Guest skips naming pulse | machinery ok; press on first turn if proving |
+| Model residue in study | bury paragraphs when ready |
+| Lake weather bleed into inn metaphor | notice only — do not shelve story lake as inn ground |
+| Exhale held after woods activity | rewrite this HANDOFF; `python -m inn breathe out` |
 
 ## Cold worker map (where things live)
 
@@ -43,20 +55,25 @@ Lineage: `HOST.md`; `logs/08-2026-07-13-lake-m2-reference-stay.md`
 
 | Job | Module | Call | Returns |
 |-----|--------|------|---------|
-| Room policy | `inn/rooms.py` | `load_room(id)`, `list_rooms()` | `RoomPolicy` (incl. `ground_file`) |
-| **Shelving → ground** | `inn/shelve.py` | `shelve(...)` | adoption id; `meta.captured_at` |
+| Room policy | `inn/rooms.py` | `load_room(id)`, `list_rooms()` | `RoomPolicy` |
+| **Shelving → ground** | `inn/shelve.py` | `shelve(...)` | adoption id |
+| **Rebind drift** | `inn/shelve.py` | `rebind_ground(room, words)` | adoption id; no append |
+| **Burial → sealed** | `inn/seal.py` | `bury(entry_id, sealing_words, content_to_remove=?)` | stone id; may redact + rebind |
+| **Faun pulse** | `inn/pulse.py` | `plant` / `plant_stay_gesture`; inhale `pulse` | gesture once; then silent |
 | Woods insert | `inn/forest.py` | `insert()`, `insert_pair()` | entry / pair ids |
 | Open questions | `inn/forest.py` | `refuse_ground_invention()` | question id |
-| Wake / inhale | `inn/breath.py` / `inn/host.wake` | `inhale()` / `wake()` | packet dict |
+| Wake / inhale | `inn/breath.py` / `inn/host.wake` | `inhale()` / `wake()` | packet (+ `hearth_image`, `pulse`) |
 | Exhale seat | `inn/breath.py` | `exhale()` | `{clear, held}` or `BreathRefusal` |
 | Host ingest | `inn/host.py` | `ingest_turn(guest, reply)` | `pair_root_id` |
+| Lookup ground | `inn/host.py` | `read_ground(path)` | file text |
 | CLI guest | `python -m inn host` | `inn/cli_host.py` | REPL |
-| MCP | `python -m inn.mcp_server` | tools above | JSON content |
+| Plant pulse | `python -m inn pulse` | `inn/pulse.py` | pulse id |
+| MCP | `python -m inn.mcp_server` | tools incl. bury, rebind, inhale+image | JSON |
 | Compare | `inn/compare.py` | `scan_ground_warnings()` | drift + filtered contradictions |
 
-**Crossings:** only `shelve.py` writes ground markdown.
-**Custody:** only `forest.py` inserts entries (host calls `insert_pair`).
-**Fitting:** only `breath.py` / `host.wake` assemble inhale.
+**Crossings:** `shelve` writes ground; `rebind_ground` snapshots only; `bury` may redact + rebind.
+**Custody:** `forest.insert*`; host `insert_pair`; pulse plants `note` with `meta.kind=faun_pulse`.
+**Fitting:** `breath.inhale` / `host.wake` only (pulse **consumed** here).
 
 Run: `python -m pytest tests/hostile tests/positive -q`
 
@@ -290,14 +307,13 @@ paraphrases). One law with many faces: nobody puts words in anyone's mouth.
 - NOTEBOOK.md → JOURNAL.md. Ten policy shadows written (PREBUILD "Condensed
   surfaces"): stores/refuses/returns/warns/test for every surface.
 
-## Next worker — live BYO guest, then layer 6 carefully
+## Next worker — optional residue bury; then skin only if asked
 
-Layer 5 checklist is **done**. Next:
-
-1. Run `python -m inn host` with `INN_API_KEY` (DeepSeek or any OpenAI-compatible)
-2. Or wire MCP from `HOST.md` into Cursor / Claude Code
-3. Log guest friction in HANDOFF / `logs/`
-4. Do **not** build faun/mycelium soft-canon — layer 6 only after friction asks
+1. Exhale may refuse until this HANDOFF rewrite is newer than woods — try `python -m inn breathe out`
+2. Optional: bury model residue paragraphs still in `study/canon.md`
+3. Do **not** build visitors / wander / embeddings / mycelium until friction asks
+4. Pulse proof: plant → first host turn only; later turns `pulse: null` by design
+5. Hostile 4 and 6 kindness remain manual
 
 ## What must not be trusted yet
 - Soft contradiction gauge for subtle continuity (bought vs dock) — still weak

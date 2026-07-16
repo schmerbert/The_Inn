@@ -7,6 +7,8 @@
 #       tests/positive/test_ground_fitting.py, test_cold_wake.py, test_exhale_seat.py
 #
 # INHALE_PACKET — inhale() / fit_packet() return shape (M0.5, layer 3).
+#   posture, standing_context, current_room, rooms, warnings, ground, pressure,
+#   pulse (faun gesture or null — dies after one wake), seam, tools, hearth_image
 # Slots cite ids and paths only. Never re-authored prose.
 #
 #   warnings  list[{label, text, path?, ...}]  compare.scan_ground_warnings
@@ -35,6 +37,8 @@ from inn.errors import BreathRefusal
 from inn.paths import repo_root
 from inn.rooms import list_rooms, load_room
 from inn.session import load as load_session, touch_inhale
+from inn import pulse as faun_pulse
+
 
 ROOM_READ_BUCKETS: dict[str, tuple[str, ...]] = {
     "manuscript": ("session_pair", "question", "adoption_record"),
@@ -157,6 +161,11 @@ def fit_packet(
     if timings_ms is not None:
         timings_ms["pressure"] = round((time.perf_counter() - t_pressure) * 1000, 3)
 
+    t_pulse = time.perf_counter()
+    pulse_snip = faun_pulse.fit_and_consume(conn)
+    if timings_ms is not None:
+        timings_ms["pulse"] = round((time.perf_counter() - t_pulse) * 1000, 3)
+
     return {
         "posture": "guest",
         "standing_context": _read_standing_context(root),
@@ -165,6 +174,7 @@ def fit_packet(
         "warnings": warnings,
         "ground": ground,
         "pressure": pressure,
+        "pulse": pulse_snip,
         "seam": _fit_seam(session.seam, session.last_pair_root_id),
         "tools": {
             "wake": "python -m inn breathe",
@@ -201,6 +211,7 @@ def empty_packet(root: Path | None = None) -> dict[str, Any]:
         "warnings": [],
         "ground": [],
         "pressure": [],
+        "pulse": None,
         "seam": session.seam,
         "tools": {
             "wake": "python -m inn breathe",

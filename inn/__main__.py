@@ -31,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
     )
 
     sub.add_parser("host", help="OpenAI-compatible guest REPL (see HOST.md)")
+    sub.add_parser("pulse", help="Plant a dusk faun gesture for the next wake")
 
     args = parser.parse_args(argv)
 
@@ -55,6 +56,30 @@ def main(argv: list[str] | None = None) -> int:
         from inn.cli_host import run_repl
 
         return run_repl()
+
+    if args.cmd == "pulse":
+        from inn import forest, pulse, session
+        from inn.compare import scan_ground_warnings
+        from inn.paths import repo_root
+
+        root = repo_root()
+        state = session.load(root)
+        forest.init_db(root)
+        with forest.connect(root) as conn:
+            warns = scan_ground_warnings(root, conn)
+        paths = [
+            p
+            for p in ("manuscript/ground.md", "study/canon.md")
+            if (root / p).exists()
+        ]
+        eid = pulse.plant_stay_gesture(
+            root=root,
+            current_room=state.current_room,
+            warning_count=len(warns),
+            ground_paths=paths,
+        )
+        print(json.dumps({"ok": True, "pulse_id": eid}, indent=2))
+        return 0
 
     return 1
 

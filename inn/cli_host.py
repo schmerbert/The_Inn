@@ -16,11 +16,12 @@ from pathlib import Path
 from typing import Any
 
 from inn import forest, session
-from inn.errors import BreathRefusal, ShelvingRefusal
+from inn.errors import BreathRefusal, SealRefusal, ShelvingRefusal
 from inn.host import (
     append_stay_turn,
     close_stay_transcript,
     guest_system_prompt,
+    hearth_image_data_url,
     ingest_turn,
     new_envelope,
     open_stay_transcript,
@@ -29,7 +30,9 @@ from inn.host import (
     write_turn_envelope,
 )
 from inn.paths import repo_root
-from inn.shelve import shelve
+from inn.seal import bury
+from inn.shelve import rebind_ground, shelve
+from inn import pulse as faun_pulse
 
 
 def load_dotenv(root: Path | None = None) -> None:
@@ -83,6 +86,46 @@ TOOL_SPECS: list[dict[str, Any]] = [
                     },
                 },
                 "required": ["room_id", "content", "adopting_words"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "rebind_ground",
+            "description": (
+                "Drift repair — snapshot current ground file hash without appending. "
+                "Author adopting words required. Use when inhale warns drawer mismatch."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "room_id": {"type": "string", "enum": ["study", "manuscript"]},
+                    "adopting_words": {"type": "string"},
+                },
+                "required": ["room_id", "adopting_words"],
+            },
+        },
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "bury",
+            "description": (
+                "Burial crossing — seal an entry. Author sealing words required. "
+                "For adoption_record with ground, pass content_to_remove (exact prose to redact)."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "entry_id": {"type": "integer"},
+                    "sealing_words": {"type": "string"},
+                    "content_to_remove": {
+                        "type": "string",
+                        "description": "Required when sealing an adoption_record linked to a ground drawer",
+                    },
+                },
+                "required": ["entry_id", "sealing_words"],
             },
         },
     },
@@ -184,6 +227,27 @@ def run_tool(name: str, arguments: dict[str, Any], *, root: Path) -> dict[str, A
             return {"ok": True, "adoption_record_id": record_id}
         except ShelvingRefusal as exc:
             return {"ok": False, "refusal": str(exc)}
+    if name == "rebind_ground":
+        try:
+            record_id = rebind_ground(
+                arguments["room_id"],
+                arguments["adopting_words"],
+                root=root,
+            )
+            return {"ok": True, "adoption_record_id": record_id, "rebind": True}
+        except ShelvingRefusal as exc:
+            return {"ok": False, "refusal": str(exc)}
+    if name == "bury":
+        try:
+            result = bury(
+                int(arguments["entry_id"]),
+                arguments["sealing_words"],
+                content_to_remove=arguments.get("content_to_remove"),
+                root=root,
+            )
+            return {"ok": True, **result}
+        except SealRefusal as exc:
+            return {"ok": False, "refusal": str(exc), "kind": True}
     if name == "set_room":
         state = session.set_room(arguments["room_id"], root)
         return {"ok": True, "current_room": state.current_room}
@@ -234,39 +298,75 @@ def run_guest_turn(
         "content": "Inhale packet (homework — cite ids/paths only):\n"
         + json.dumps(packet, indent=2),
     }
+    # First turn of stay: attach hearthstone pixels for vision-capable models.
+    user_content: Any = user_text
+    if not history:
+        data_url = hearth_image_data_url(root)
+        if data_url:
+            user_content = [
+                {
+                    "type": "text",
+                    "text": (
+                        "[Hearthstone — wake orientation, not propositions. "
+                        "Welcome; fire winning; fog outside.]\n\n"
+                        + user_text
+                    ),
+                },
+                {"type": "image_url", "image_url": {"url": data_url}},
+            ]
     messages: list[dict[str, Any]] = [
         {"role": "system", "content": system},
         homework,
         *history,
-        {"role": "user", "content": user_text},
+        {"role": "user", "content": user_content},
     ]
 
     t_model = time.perf_counter()
     assistant_text = ""
-    # Tool loop — same wake packet; do not re-inhale.
-    for _ in range(8):
-        raw = chat_completion(
-            messages, api_key=api_key, api_base=api_base, model=model, tools=TOOL_SPECS
-        )
-        choice = raw["choices"][0]["message"]
-        messages.append(choice)
-        tool_calls = choice.get("tool_calls") or []
-        if not tool_calls:
-            assistant_text = choice.get("content") or ""
-            break
-        for call in tool_calls:
-            fn = call["function"]
-            args = json.loads(fn.get("arguments") or "{}")
-            result = run_tool(fn["name"], args, root=root)
-            messages.append(
-                {
-                    "role": "tool",
-                    "tool_call_id": call["id"],
-                    "content": json.dumps(result),
-                }
+    used_hearth_image = isinstance(user_content, list)
+
+    def _run_tool_loop(msgs: list[dict[str, Any]]) -> tuple[str, list[dict[str, Any]]]:
+        local_msgs = list(msgs)
+        text = ""
+        for _ in range(8):
+            raw = chat_completion(
+                local_msgs, api_key=api_key, api_base=api_base, model=model, tools=TOOL_SPECS
             )
-    else:
-        assistant_text = assistant_text or "(tool loop limit)"
+            choice = raw["choices"][0]["message"]
+            local_msgs.append(choice)
+            tool_calls = choice.get("tool_calls") or []
+            if not tool_calls:
+                text = choice.get("content") or ""
+                break
+            for call in tool_calls:
+                fn = call["function"]
+                args = json.loads(fn.get("arguments") or "{}")
+                result = run_tool(fn["name"], args, root=root)
+                local_msgs.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call["id"],
+                        "content": json.dumps(result),
+                    }
+                )
+        else:
+            text = text or "(tool loop limit)"
+        return text, local_msgs
+
+    # Tool loop — same wake packet; do not re-inhale.
+    try:
+        assistant_text, messages = _run_tool_loop(messages)
+    except RuntimeError:
+        # Text-only APIs may reject multimodal — retry without hearth pixels.
+        if not used_hearth_image:
+            raise
+        messages = [
+            {"role": "system", "content": system},
+            homework,
+            *history,
+            {"role": "user", "content": user_text},
+        ]
+        assistant_text, messages = _run_tool_loop(messages)
 
     envelope["model_ms"] = round((time.perf_counter() - t_model) * 1000, 3)
     pair_id = ingest_turn(user_text, assistant_text or None, root=root)
@@ -340,4 +440,28 @@ def run_repl(root: Path | None = None) -> int:
         held_note = f"Exhale held: {exc}"
     close_stay_transcript(transcript, note=held_note)
     print(f"Stay transcript saved: {transcript}")
+
+    # Faun dusk gesture — next inhale surfaces once, then dies (MAP decay law).
+    try:
+        state = session.load(root)
+        from inn.compare import scan_ground_warnings
+
+        forest.init_db(root)
+        with forest.connect(root) as conn:
+            warns = scan_ground_warnings(root, conn)
+        ground_paths = [
+            p
+            for p in ("manuscript/ground.md", "study/canon.md")
+            if (root / p).exists()
+        ]
+        pid = faun_pulse.plant_stay_gesture(
+            root=root,
+            current_room=state.current_room,
+            warning_count=len(warns),
+            ground_paths=ground_paths,
+        )
+        print(f"Faun pulse planted for next wake: entry {pid}")
+    except Exception as exc:
+        print(f"[host] pulse plant skipped: {exc}", file=__import__("sys").stderr)
+
     return 0

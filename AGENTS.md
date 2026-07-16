@@ -44,16 +44,15 @@ Humans may read the code. **Agents must be able to work from it.**
 
 | Done | Not done |
 |------|----------|
-| PREBUILD, FOREST, REGISTERS, SHOWCASE, MAP, PYRAMID | First real use |
-| Layers 1–5: registry → host (CLI + MCP) | Layer 6: faun, visitors, wander, embeddings |
-| Hostile tests 1–3, 5 + positive suite (37 green) | Hostile 4, 6 (manual/eval) |
-| Design ancestry in `logs/` | Fuller inhabitable skin |
-| Exemplars in `TheMarble(manual_examples)/` | faun, visitors, wander, embeddings |
+| PREBUILD, FOREST, REGISTERS, SHOWCASE, MAP, PYRAMID | Fuller SHOWCASE skin |
+| Layers 1–5: registry → host (CLI + MCP) | Layer 6 rest: visitors, wander, embeddings |
+| L6 partial: hearth, bury, rebind, faun pulses (felt) | Haiku subprocess faun |
+| Hostile 1–3, 5 + burial mechanical + pulse decay (52 green) | Hostile 4, 6 kindness (manual/eval) |
+| Lake + BYO + burial/pulse stays | Warm-candidates, mycelium, unseal |
 
 **Build posture: onion layers.** Each layer is a small, honest commit.
-The inn may not be fully inhabitable until late layers. That is correct.
-
-Do not furnish rooms before the frame carries weight.
+Do not furnish rooms before the frame carries weight — frame now carries;
+remaining skin waits on friction.
 
 ---
 
@@ -89,7 +88,7 @@ hostile floor; trench's one-gate refusal pattern.
 | **3 — Ground** | seed rooms wired; test 5 + ground fitting | Starting |
 | **4 — Breath** | pair insert, traverse by hand, BREATH.md | Poorly |
 | **5 — Host** | Claude Code / any-API CLI + MCP, session capture | Daily driver |
-| **6 — Skin** | faun, visitors, wander, injection machinery | SHOWCASE-true |
+| **6 — Skin** | hearth, bury, rebind, faun pulses partial; visitors/wander later | Daily + immersion |
 
 **Layer 1 is structural only.** Empty rooms are fine. Missing rooms are not.
 Red tests are fine. Hostile tests that pass without exercising the real
@@ -129,7 +128,7 @@ or getting tests red.
 
 ---
 
-## Code layout (as built — layer 3)
+## Code layout (as built — layer 6 partial)
 
 ```text
 TheInn/
@@ -138,30 +137,24 @@ TheInn/
   BUILD.md               ← layer state + scope
   HANDOFF.md             ← guest book; **Cold worker map** lives here
   ENTRY.md               ← arrival seat for runtime guests
+  HOST.md                ← wake contract, tools, friction
   rooms.yaml             ← room registry (ordered ids)
-  PREBUILD.md            ← ancestry; do not edit without cause
-  FOREST.md              ← schema lineage (law is woods/schema.sql)
   manuscript/  study/  desk/  visitors/   ← each has room.yaml
   inn/
-    __main__.py          ← python -m inn breathe
-    paths.py             ← repo_root()
-    errors.py            ← refusal exception families
-    rooms.py             ← load registry, resolve policy
-    session.py           ← .inn/session.yaml → SessionState
-    breath.py            ← inhale; exhale seat (L5); INHALE_PACKET
-    host.py              ← wake, ingest_turn, guest prompt
-    cli_host.py          ← python -m inn host (any API)
+    __main__.py          ← breathe | host | pulse
+    breath.py            ← inhale (incl. pulse consume); exhale
+    host.py              ← wake, read_ground, guest prompt
+    cli_host.py          ← python -m inn host
     mcp_server.py        ← python -m inn.mcp_server
     forest.py            ← woods insert/refuse; adopt() woods-only
-    shelve.py            ← **only** crossing to author ground files
-    compare.py           ← drawer drift, contradictions, adoption chain
-    seal.py              ← burial stub (raises SealRefusal)
-  assets/hearth/         ← hearthstone image slot (layer 6)
-  woods/                 ← woods.db lives here; schema.sql committed
-  tests/
-    hostile/             ← the law, executable
-    positive/            ← happy paths
-  hearth.json            ← writer standing_context (layer 4.5)
+    shelve.py            ← shelve + rebind_ground
+    seal.py              ← bury (Burial crossing)
+    pulse.py             ← FAUN_PULSE plant / decay
+    compare.py           ← drawer drift, contradictions
+  assets/hearth/hearth.jpg ← wake hearthstone
+  woods/                 ← woods.db + schema.sql
+  tests/hostile/         ← the law, executable (+ README_test6.md)
+  hearth.json            ← writer standing_context
 ```
 
 Adjust names only if HANDOFF records why. New rooms: add dir + `room.yaml` +
@@ -202,18 +195,19 @@ not only pytest asserts. Say so in BUILD.md; do not fake them green.
 
 ---
 
-## Arriving cold (layers 1–5 done — live host / layer 6 next)
+## Arriving cold (L6 partial — host + immersion)
 
 When the human says go:
 
 1. Read HANDOFF **Cold worker map** + **HOST.md** if waking a guest
-2. Run `python -m pytest tests/hostile tests/positive -q` — must stay green
-3. **Do not** write ground except through `shelve()`; **do not** use `forest.adopt()` for drawers
-4. Layer 6 only when friction asks — faun/visitors/wander/embeddings/warm-candidates
-5. Rewrite HANDOFF at layer end
+2. Run `python -m pytest tests/hostile tests/positive -q` — must stay green (~52)
+3. **Do not** write ground except through `shelve()` / `rebind_ground()`; bury via `seal.bury` only
+4. **Do not** use `forest.adopt()` for drawers
+5. Remaining skin (visitors/wander/embeddings) only when friction asks
+6. Rewrite HANDOFF at layer end
 
-Already done (do not rebuild): rooms, shelve, inhale, Lake M2 stay, contradiction
-filters, dual host (`python -m inn host` / `python -m inn.mcp_server`).
+Already done (do not rebuild): rooms, shelve, inhale, Lake M2, dual host,
+`read_ground`, hearth, bury, rebind, faun pulses.
 
 ---
 

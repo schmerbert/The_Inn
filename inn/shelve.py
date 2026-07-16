@@ -5,10 +5,11 @@
 #          manuscript without source_verbatim (see TRAILHEAD below)
 # Returns: int — adoption_record entry id in woods.db
 # Test: tests/hostile/test_shelve_praise_not_adoption.py, test_extraction_paraphrase.py
-#       tests/positive/test_shelve_happy.py
+#       tests/positive/test_shelve_happy.py, test_rebind_ground.py
 #
 # TRAILHEAD — source_verbatim: required for manuscript; optional for study.
 # TRAILHEAD — captured_at: stamped at crossing; writer does not type dates.
+# TRAILHEAD — rebind_ground: drift repair; snapshots file hash without appending.
 
 from __future__ import annotations
 
@@ -163,6 +164,78 @@ def shelve(
     if conn is not None:
         return _cross(conn)
 
+    with forest.connect(root) as db:
+        record_id = _cross(db)
+        db.commit()
+        return record_id
+
+
+def rebind_ground(
+    target_room_id: str,
+    adopting_words: str,
+    *,
+    author_signature: str = "author",
+    pair_root_id: int | None = None,
+    conn: sqlite3.Connection | None = None,
+    root: Path | None = None,
+) -> int:
+    """Re-trailhead drift — snapshot current drawer hash without appending text.
+
+    Use after burial redact or silent edit repair. Ceremony required (same spirit as shelve).
+    """
+    root = root or repo_root()
+    room = load_room(target_room_id, root)
+
+    if not room.allows_crossing("shelve"):
+        raise ShelvingRefusal(f"room {target_room_id!r} does not allow shelve crossing")
+    if not room.allows_write("shelving"):
+        raise ShelvingRefusal(f"room {target_room_id!r} does not allow shelving writes")
+    if not adopting_words or not adopting_words.strip():
+        raise ShelvingRefusal("missing adopting words")
+    if _is_praise_only(adopting_words):
+        raise ShelvingRefusal("enthusiasm is not adoption")
+
+    ground_path = _ground_path(room)
+    if not ground_path.is_file():
+        raise ShelvingRefusal(f"missing ground file for {target_room_id!r}")
+    file_text = normalize_text(ground_path.read_text(encoding="utf-8"))
+    ceremony = adopting_words.strip()
+    captured_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    def _cross(db: sqlite3.Connection) -> int:
+        origin_id = pair_root_id
+        if origin_id is None:
+            origin_id = forest.insert_pair_root(
+                db,
+                signature=author_signature,
+                body=ceremony,
+            )
+        rel_path = ground_path.relative_to(root).as_posix()
+        prev_id = latest_adoption_for_ground_path(db, rel_path)
+        record_id = forest.insert(
+            db,
+            forest="home",
+            bucket="adoption_record",
+            signature=author_signature,
+            authority="record",
+            body=ceremony,
+            content_hash=content_hash(file_text),
+            meta={
+                "ground_path": rel_path,
+                "captured_at": captured_at,
+                "rebind": True,
+            },
+            origin_to_id=origin_id,
+            origin_kind="adopts",
+        )
+        if prev_id is not None:
+            forest.add_edge(db, record_id, prev_id, "cites")
+        return record_id
+
+    if conn is not None:
+        return _cross(conn)
+
+    forest.init_db(root)
     with forest.connect(root) as db:
         record_id = _cross(db)
         db.commit()

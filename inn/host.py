@@ -1,9 +1,9 @@
-# host — Layer 5 wake core (CLI + MCP share this).
+# host — Layer 5–6 wake core (CLI + MCP share this).
 #
 # Stores: logs/host turn envelopes + stay transcripts; session.last_pair_root_id
 # Refuses: mid-turn re-inhale (callers must not); missing API key at CLI edge
-# Returns: wake packet; ingest pair ids; guest system prompt; timing / stay logs
-# Test: tests/positive/test_host_wake.py, test_cli_host_tools.py
+# Returns: wake packet; ingest pair ids; guest system prompt; timing / stay logs; hearth helpers
+# Test: tests/positive/test_host_wake.py, test_cli_host_tools.py, test_hearth_wake.py
 
 from __future__ import annotations
 
@@ -29,14 +29,25 @@ Authority:
 - Never say something was "shelved" or "adopted" unless the shelve tool returned ok: true.
 - Desk drafts are model-signed until Shelving. Praise is not adoption.
 - Invented facts → refuse_invention (open question). Convention (a lamp in a study) is texture, not ground — say so if asked.
+- The house does not delete. Offer the Burial (bury tool) with the writer's sealing words.
+- Never say something was "buried" or "sealed" unless the bury tool returned ok: true.
+- Never claim a chapter is gone from ground unless bury redacted it (ok + ground_redacted).
+- If the inhale packet has a pulse: it is a faun gesture (signed, not ground). Nod at it; do not shelve it; it dies after this wake.
 
 Voice:
 - Prefer fewer torch-handbacks ("shall we…", "does that feel right?"). The writer drives; you stay at the railing.
 - Questions may echo unanswered. That is allowed.
 
-Tools: read_ground, shelve, set_room, refuse_invention, record_pair, exhale as provided.
+Tools: read_ground, shelve, rebind_ground, bury, set_room, refuse_invention, record_pair, exhale as provided.
 forest.adopt is not a marble door.
 """
+
+
+_HEARTH_POSTURE = (
+    "\n\nHearthstone: lit. Orientation only — welcome, not lonely; fire winning; "
+    "fog outside. Not propositions. If you can see the image, wake into that posture; "
+    "if not, know the fire is lit at the path in the packet."
+)
 
 
 # Ground paths guests may open as lookup (not authority change).
@@ -84,12 +95,38 @@ def wake(root: Path | None = None) -> dict[str, Any]:
         "wake": "inn.host.wake / inhale",
         "read_ground": "inn.host.read_ground",
         "shelve": "inn.shelve.shelve",
+        "rebind_ground": "inn.shelve.rebind_ground",
+        "bury": "inn.seal.bury",
         "set_room": "inn.session.set_room",
         "refuse_invention": "inn.forest.refuse_ground_invention",
         "record_pair": "inn.host.ingest_turn",
         "exhale": "inn.breath.exhale",
     }
     return packet
+
+
+def hearth_image_absolute(root: Path | None = None) -> Path | None:
+    """Absolute path to hearthstone file when present; else None."""
+    root = root or repo_root()
+    rel = breath._hearth_image_path(root)
+    if not rel:
+        return None
+    path = root / rel
+    return path if path.is_file() else None
+
+
+def hearth_image_data_url(root: Path | None = None) -> str | None:
+    """data: URL for OpenAI-compatible multimodal attach; None if no image."""
+    import base64
+    import mimetypes
+
+    path = hearth_image_absolute(root)
+    if path is None:
+        return None
+    mime, _ = mimetypes.guess_type(str(path))
+    mime = mime or "image/jpeg"
+    b64 = base64.b64encode(path.read_bytes()).decode("ascii")
+    return f"data:{mime};base64,{b64}"
 
 
 def guest_system_prompt(packet: dict[str, Any] | None = None) -> str:
@@ -100,6 +137,8 @@ def guest_system_prompt(packet: dict[str, Any] | None = None) -> str:
         room = (packet.get("current_room") or {}).get("id", "")
         if sc or room:
             extra = f"\n\nStanding context: {sc or '(empty)'}\nCurrent room: {room}"
+        if packet.get("hearth_image"):
+            extra += _HEARTH_POSTURE
     return GUEST_SYSTEM + extra
 
 

@@ -112,11 +112,15 @@ def list_adoptions_for_ground_path(
     conn: sqlite3.Connection,
     ground_path: str,
 ) -> list[int]:
-    """All adoption_record ids for a drawer, oldest first — full Shelving chain."""
+    """All open adoption_record ids for a drawer, oldest first — full Shelving chain.
+
+    Sealed adoptions are excluded (Burial removed them from every retrieval path).
+    """
     rows = conn.execute(
         """
         SELECT id FROM entries
         WHERE bucket = 'adoption_record'
+          AND visibility != 'sealed'
           AND json_extract(meta_json, '$.ground_path') = ?
         ORDER BY id ASC
         """,

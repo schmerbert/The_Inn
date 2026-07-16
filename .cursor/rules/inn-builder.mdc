@@ -8,8 +8,9 @@ alwaysApply: true
 **Read `BUILD_SPEC.md` first.** This rule is the short form.
 
 ## Phase
-Map complete. Layers 1–5 on disk (bones → host). **Layer 6 = skin** only when
-friction asks (faun, visitors, wander). Do not furnish before the frame carries weight.
+Map complete. Layers 1–5 on disk. **Layer 6 partial:** hearth, bury, rebind,
+faun pulses felt. Remaining skin (visitors, wander, embeddings) only when
+friction asks. Do not furnish ahead of scars.
 
 ## Prime directive
 **AI legibility over human cleverness.** If the next cold agent must hunt
@@ -25,7 +26,8 @@ PREBUILD (condensed surfaces) + FOREST.md when BUILD_SPEC points you there.
 ## Do not
 - Hardcode room names in Python — use `rooms.yaml` + `room.yaml`
 - Add philosophy docs during build
-- Build faun, mycelium, visitors, wander, embeddings before layer 6 is earned
+- Build mycelium, visitors, wander, embeddings before friction earns them
+- Rebuild hearth/bury/pulse — already on disk
 - Green tests without real crossings (no theater)
 - Abstract "for later"
 - Soft-canon / “implied promotions” as authority — attention only, later

@@ -18,6 +18,7 @@ Files are named `NN-YYYY-MM-DD-slug.md` where `NN` is read order. Each file's
 | `08-2026-07-13-lake-m2-reference-stay.md` | Cursor | 2 | *The Lake* M2 stay; filters; layer 4 close / 4.5 |
 | `09-2026-07-14-first-byo-host-stay.md` | DeepSeek host | 2 | First BYO guest stay; railing / ghosts method |
 | `10-2026-07-14-layer5-host-byo-guest.md` | Cursor | 2 | Full builder session: L5 host + BYO friction + read_ground |
+| `11-2026-07-16-layer6-hearth-bury-pulse.md` | Cursor | 2 | L6 immersion: hearth, burial stay, rebind, faun pulses, docs |
 
 Raw `.jsonl` sources (unsanitized) live in `.source/` (gitignored, local only).
 Run `python tools/sanitize_logs.py` after manual edits to published logs.

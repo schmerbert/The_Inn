@@ -1,8 +1,8 @@
-# mcp_server — thin MCP stdio surface for The Inn (Layer 5).
+# mcp_server — thin MCP stdio surface for The Inn (Layer 5 + hearth/burial).
 #
-# Stores: nothing itself (delegates to host/breath/shelve/session)
-# Refuses: unknown tools; shelve refusals returned as structured content
-# Returns: MCP tool results over stdout
+# Stores: nothing itself (delegates to host/breath/shelve/seal/session)
+# Refuses: unknown tools; shelve/seal refusals returned as structured content
+# Returns: MCP tool results over stdout (inhale may include image block)
 # Test: tests/positive/test_mcp_tools.py
 #
 # Run: python -m inn.mcp_server
@@ -10,16 +10,19 @@
 
 from __future__ import annotations
 
+import base64
 import json
+import mimetypes
 import sys
 from pathlib import Path
 from typing import Any
 
 from inn import breath, forest, session
-from inn.errors import BreathRefusal, ShelvingRefusal
-from inn.host import ingest_turn, read_ground, wake
+from inn.errors import BreathRefusal, SealRefusal, ShelvingRefusal
+from inn.host import hearth_image_absolute, ingest_turn, read_ground, wake
 from inn.paths import repo_root
-from inn.shelve import shelve
+from inn.seal import bury
+from inn.shelve import rebind_ground, shelve
 
 
 def _root() -> Path:
@@ -33,7 +36,7 @@ def _root() -> Path:
 TOOLS = [
     {
         "name": "inhale",
-        "description": "Wake / arrival packet. Call first. Homework — ids/paths only.",
+        "description": "Wake / arrival packet. Call first. Homework — ids/paths only. May include hearthstone image.",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
@@ -57,6 +60,34 @@ TOOLS = [
                 "source_verbatim": {"type": "string"},
             },
             "required": ["room_id", "content", "adopting_words"],
+        },
+    },
+    {
+        "name": "rebind_ground",
+        "description": "Drift repair — snapshot current ground hash without appending. Author words required.",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "room_id": {"type": "string"},
+                "adopting_words": {"type": "string"},
+            },
+            "required": ["room_id", "adopting_words"],
+        },
+    },
+    {
+        "name": "bury",
+        "description": (
+            "Burial crossing — seal an entry. Author sealing words required. "
+            "For ground-linked adoption_record, pass content_to_remove."
+        ),
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "entry_id": {"type": "integer"},
+                "sealing_words": {"type": "string"},
+                "content_to_remove": {"type": "string"},
+            },
+            "required": ["entry_id", "sealing_words"],
         },
     },
     {
@@ -115,6 +146,27 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
             return {"ok": True, "adoption_record_id": rid}
         except ShelvingRefusal as exc:
             return {"ok": False, "refusal": str(exc)}
+    if name == "rebind_ground":
+        try:
+            rid = rebind_ground(
+                arguments["room_id"],
+                arguments["adopting_words"],
+                root=root,
+            )
+            return {"ok": True, "adoption_record_id": rid, "rebind": True}
+        except ShelvingRefusal as exc:
+            return {"ok": False, "refusal": str(exc)}
+    if name == "bury":
+        try:
+            result = bury(
+                int(arguments["entry_id"]),
+                arguments["sealing_words"],
+                content_to_remove=arguments.get("content_to_remove"),
+                root=root,
+            )
+            return {"ok": True, **result}
+        except SealRefusal as exc:
+            return {"ok": False, "refusal": str(exc), "kind": True}
     if name == "set_room":
         state = session.set_room(arguments["room_id"], root)
         return {"ok": True, "current_room": state.current_room}
@@ -145,6 +197,27 @@ def call_tool(name: str, arguments: dict[str, Any]) -> dict[str, Any]:
         except BreathRefusal as exc:
             return {"ok": False, "clear": False, "held": [str(exc)]}
     return {"ok": False, "refusal": f"unknown tool {name!r}"}
+
+
+def _inhale_mcp_content(root: Path) -> list[dict[str, Any]]:
+    """Packet JSON + optional hearthstone image (cabin hearth pattern)."""
+    packet = wake(root)
+    content: list[dict[str, Any]] = [
+        {"type": "text", "text": json.dumps(packet, indent=2)}
+    ]
+    image_path = hearth_image_absolute(root)
+    if image_path is not None:
+        mime, _ = mimetypes.guess_type(str(image_path))
+        mime = mime or "image/jpeg"
+        b64 = base64.b64encode(image_path.read_bytes()).decode("ascii")
+        content.append(
+            {
+                "type": "image",
+                "data": b64,
+                "mimeType": mime,
+            }
+        )
+    return content
 
 
 def _reply(msg_id: Any, result: Any) -> None:
@@ -183,7 +256,7 @@ def handle(message: dict[str, Any]) -> None:
             {
                 "protocolVersion": "2024-11-05",
                 "capabilities": {"tools": {}},
-                "serverInfo": {"name": "the-inn", "version": "0.5.0"},
+                "serverInfo": {"name": "the-inn", "version": "0.6.0"},
             },
         )
         return
@@ -196,6 +269,9 @@ def handle(message: dict[str, Any]) -> None:
         name = params.get("name")
         arguments = params.get("arguments") or {}
         try:
+            if name == "inhale":
+                _reply(msg_id, {"content": _inhale_mcp_content(_root())})
+                return
             payload = call_tool(name, arguments)
             _reply(
                 msg_id,

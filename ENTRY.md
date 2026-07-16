@@ -47,10 +47,13 @@ Not rooms: `HANDOFF.md` (guest book), `JOURNAL/` (your voice), `woods/` (custody
 
 ## Crossings
 
-- **Shelving** — author's adopting words → ground (`shelve` tool / `inn.shelve.shelve`); date stamped on capture
-- **Burial** — sealed visibility + stone (not implemented; `inn.seal.bury` raises)
+- **Shelving** — author's adopting words → ground (`shelve` / `inn.shelve.shelve`)
+- **Rebind** — drift repair; snapshot current drawer hash, no append (`rebind_ground`)
+- **Burial** — seal + stone; may redact ground (`bury` / `inn.seal.bury`); never raw delete
+- **Lookup** — `read_ground` opens manuscript/study text (not a crossing)
+- **Faun pulse** — signed gesture in inhale `pulse` once, then silent (`inn/pulse.py`)
 - **Exhale** — seat check (`python -m inn breathe out` / tool `exhale`); rewrite HANDOFF if refused
 
 ## Builders
 
-`BUILD_SPEC.md` → `HANDOFF.md` (**Cold worker map**) → `BUILD.md` → `AGENTS.md` → `HOST.md` (layer 5)
+`BUILD_SPEC.md` → `HANDOFF.md` (**Cold worker map**) → `BUILD.md` → `AGENTS.md` → `HOST.md`
